@@ -23,7 +23,7 @@ services:
     environment:
       - NGINX_LISTEN=8000
     ports:
-      - "80:88"
+      - "88:80"
     depends_on:
       - app
     volumes:
