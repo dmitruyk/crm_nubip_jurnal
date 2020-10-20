@@ -7,6 +7,10 @@ services:
     volumes:
       - static_data:/test/static/
     restart: unless-stopped
+    environment:
+      - debug=${DEBUG}
+      - secret_key=${SECRET_KEY}
+      - database_url=${DATABASE_URL}
 #  postgres:
 #    image: postgres:10
 #    environment:
