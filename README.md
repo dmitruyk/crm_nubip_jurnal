@@ -10,7 +10,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 ```
 ##Pull the progect from github
 ```
-git clone https://github.com/dmitruyk/main2.git
+git clone https://github.com/dmitruyk/crm_nubip_jurnal.git
 
 Enter in project root
 Run command docker-compose up -d --build
