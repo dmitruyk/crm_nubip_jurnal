@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'kredit',
+    'nubip',
 ]
 
 MIDDLEWARE = [
@@ -111,5 +111,5 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # AUTH
-AUTH_USER_MODEL = 'kredit.User'
+AUTH_USER_MODEL = 'nubip.User'
 #AUTH_PROFILE_MODULE = 'models.UserProfile'

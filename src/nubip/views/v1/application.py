@@ -1,5 +1,5 @@
 import logging
-from ...models import CustomerProfile, Passport, PhoneNumber, PartnerInfo
+from ...models import *
 from ...decorators import basic_auth, login_required
 from ... import exceptions as ex
 from django.http import JsonResponse

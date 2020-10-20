@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 
-#from src.kredit.models import general
+#from src.nubip.models import general
 from . import v1
 
 urlpatterns = [

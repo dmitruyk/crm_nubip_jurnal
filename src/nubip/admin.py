@@ -12,9 +12,9 @@ from .models import *
 #     # ordering = ['-created']
 
 
-@admin.register(PartnerInfo)
-class PartnerInfoAdmin(admin.ModelAdmin):
-    pass
+# @admin.register(PartnerInfo)
+# class PartnerInfoAdmin(admin.ModelAdmin):
+#     pass
 
 
 @admin.register(APIClient)
@@ -30,21 +30,21 @@ class UserAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(CreditOrganizationInfo)
-class CreditOrganizationInfoAdmin(admin.ModelAdmin):
-    pass
-
-@admin.register(Offer)
-class OfferAdmin(admin.ModelAdmin):
-    pass
-
-@admin.register(CustomerProfile)
-class CustomerProfileAdmin(admin.ModelAdmin):
-    pass
-
-@admin.register(Application)
-class ApplicationAdmin(admin.ModelAdmin):
-    pass
+# @admin.register(CreditOrganizationInfo)
+# class CreditOrganizationInfoAdmin(admin.ModelAdmin):
+#     pass
+#
+# @admin.register(Offer)
+# class OfferAdmin(admin.ModelAdmin):
+#     pass
+#
+# @admin.register(CustomerProfile)
+# class CustomerProfileAdmin(admin.ModelAdmin):
+#     pass
+#
+# @admin.register(Application)
+# class ApplicationAdmin(admin.ModelAdmin):
+#     pass
 
 @admin.register(Passport)
 class PassportAdmin(admin.ModelAdmin):
