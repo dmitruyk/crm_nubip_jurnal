@@ -1,0 +1,36 @@
+version: '3'
+services:
+  app:
+    build: src/
+    depends_on:
+      - postgres
+    volumes:
+      - static_data:/test/static/
+    restart: unless-stopped
+  postgres:
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    restart: unless-stopped
+  webserver:
+    image: nginx:mainline-alpine
+    environment:
+      - NGINX_LISTEN=8000
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_data:/test/static/:ro
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  static_data:

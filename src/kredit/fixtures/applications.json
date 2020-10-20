@@ -1,0 +1,21 @@
+{
+	"creation_date": "2019-05-10",
+	"send": "2019-05-10",
+	"customer": {
+		"first_name": "testuser",
+		"last_name": "user_test",
+		"add_name": "test",
+		"date_of_birth": "2010-05-10",
+		"passport": {
+			"number": 111111,
+			"issue_date": "2019-05-10"
+		},
+		"phone_number": {
+			"country_code": "380",
+			"area_code": 88,
+			"number": 1231212,
+			"type": "main"
+		}
+	},
+	"scoring_score": 99
+}
