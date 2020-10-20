@@ -2,8 +2,8 @@ version: '3'
 services:
   app:
     build: src/
-    depends_on:
-      - postgres
+#    depends_on:
+#      - postgres
     volumes:
       - static_data:/test/static/
     restart: unless-stopped
