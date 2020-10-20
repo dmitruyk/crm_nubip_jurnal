@@ -7,6 +7,8 @@ services:
     volumes:
       - static_data:/test/static/
     restart: unless-stopped
+    env_file:
+      - app.env
     environment:
       - debug=${DEBUG}
       - secret_key=${SECRET_KEY}
