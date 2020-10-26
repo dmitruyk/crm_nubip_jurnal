@@ -6,10 +6,10 @@ from django.contrib.auth.hashers import make_password
 from .models import *
 
 
-# class ProductInline(admin.TabularInline):
-#     model = Product
-#     # extra = 0
-#     # ordering = ['-created']
+class MemberGroupInline(admin.TabularInline):
+    model = MemberGroup
+    extra = 1
+    ordering = ['-created']
 
 
 # @admin.register(PartnerInfo)
@@ -17,13 +17,13 @@ from .models import *
 #     pass
 
 
-@admin.register(APIClient)
-class APIClientAdmin(admin.ModelAdmin):
-    pass
-
-@admin.register(APIKey)
-class APIKeyAdmin(admin.ModelAdmin):
-    pass
+@admin.register(StudentGroup)
+class StudentGroupAdmin(admin.ModelAdmin):
+    inlines = [
+            MemberGroupInline,
+            # ChargeBoxActionInline,
+            # ChargePointActionInline
+        ]
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -46,13 +46,13 @@ class UserAdmin(admin.ModelAdmin):
 # class ApplicationAdmin(admin.ModelAdmin):
 #     pass
 
-@admin.register(Passport)
-class PassportAdmin(admin.ModelAdmin):
-    pass
-
-@admin.register(PhoneNumber)
-class PhoneNumberAdmin(admin.ModelAdmin):
-    pass
+# @admin.register(Passport)
+# class PassportAdmin(admin.ModelAdmin):
+#     pass
+#
+# @admin.register(PhoneNumber)
+# class PhoneNumberAdmin(admin.ModelAdmin):
+#     pass
 
 # Register your models here.
 

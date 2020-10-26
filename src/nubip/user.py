@@ -13,13 +13,16 @@ class UserManager(models.UserManager):
 class User(CoreModel, models.AbstractUser):
     class Meta:
         db_table = u'user'
+        verbose_name_plural = "Користувачі"
 
     objects = UserManager()
 
     ROLES = (
-        ('company', 'Company'),
-        ('partner', 'Partner'),
-        ('super', 'Super')
+        ('headman', 'Староста'),
+        ('curator', 'Куратор'),
+        ('teacher', 'Викладач'),
+        ('head_assistant', 'Заступник директора'),
+        ('head', 'Директор')
     )
 
     TURN_FORMS = (
@@ -41,7 +44,7 @@ class User(CoreModel, models.AbstractUser):
     lang_form = db_models.CharField(_('Lang form'), choices=LANG_FORMS,
                                     max_length=5, null=True, blank=True)
 
-    role = db_models.CharField(_('role'), choices=ROLES, null=False, max_length=10, blank=False)
+    role = db_models.CharField(_('role'), choices=ROLES, null=False, max_length=20, blank=False)
 
     @property
     def name(self):

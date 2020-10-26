@@ -241,3 +241,22 @@ class UserProfile(CoreModel):
 #             'status': self.status,
 #
 #         }
+
+class StudentGroup(CoreModel):
+    class Meta:
+        verbose_name_plural = "Академічні групи"
+
+    name = models.CharField(null=False, blank=False, max_length=25, default=None, verbose_name='Назва')
+    #member = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
+
+    def __str__(self):
+        return self.name
+
+
+class MemberGroup(CoreModel):
+    class Meta:
+        verbose_name_plural = "Учасники"
+        unique_together = ('member_group', 'member_user',)
+
+    member_group = models.ForeignKey(StudentGroup, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
+    member_user = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
