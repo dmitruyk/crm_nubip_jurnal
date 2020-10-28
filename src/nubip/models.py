@@ -291,7 +291,6 @@ class Event(models.Model):
         verbose_name_plural = 'Розклад занять'
 
     def check_overlap(self, fixed_start, fixed_end, new_start, new_end):
-        return False
         overlap = False
         if new_start == fixed_end or new_end == fixed_start:  # edge case
             overlap = False
@@ -311,7 +310,7 @@ class Event(models.Model):
         if self.end_time <= self.start_time:
             raise ValidationError('Ending times must after starting times')
 
-        events = Event.objects.filter(day=self.day)
+        events = Event.objects.filter(day=self.day, academic_group=self.academic_group)
         if events.exists():
             for event in events:
                 if self.check_overlap(event.start_time, event.end_time, self.start_time, self.end_time):
