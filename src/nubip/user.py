@@ -18,11 +18,13 @@ class User(CoreModel, models.AbstractUser):
     objects = UserManager()
 
     ROLES = (
+        ('student', 'Студент'),
         ('headman', 'Староста'),
         ('curator', 'Куратор'),
         ('teacher', 'Викладач'),
         ('head_assistant', 'Заступник директора'),
-        ('head', 'Директор')
+        ('head', 'Директор'),
+        ('admin', 'Admin')
     )
 
     TURN_FORMS = (
@@ -57,7 +59,7 @@ class User(CoreModel, models.AbstractUser):
             return None
 
     def __str__(self):
-        return '{}'.format(self.username)
+        return '{}'.format(self.name)
 
     def is_admin(self):
             return self.role in ('partner', 'super')

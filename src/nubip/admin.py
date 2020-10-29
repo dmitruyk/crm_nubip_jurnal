@@ -12,6 +12,12 @@ from django.contrib.auth.hashers import make_password
 
 from .models import *
 
+@admin.register(MemberGroup)
+class MemberGroupAdmin(admin.ModelAdmin):
+    list_display = ['member_group', 'member_user', 'get_role']
+
+    def get_role(self, obj):
+        return obj.member_user.role
 
 class MemberGroupInline(admin.TabularInline):
     model = MemberGroup
@@ -35,8 +41,12 @@ class AcademicGroupAdmin(admin.ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['name', 'role']
 
+@admin.register(AbstractModel)
+class AbstractModelAdmin(admin.ModelAdmin):
+    list_display = ['name', 'academic_group', 'day']
+    list_filter = ('academic_group',)
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):

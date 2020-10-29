@@ -317,3 +317,12 @@ class Event(models.Model):
                     raise ValidationError(
                         'There is an overlap with another event: ' + str(event.day) + ', ' + str(
                             event.start_time) + '-' + str(event.end_time))
+
+
+class AbstractModel(Event):
+    class Meta:
+        verbose_name_plural = "Як Список"
+
+    def __str__(self):
+        return f'{self.name}'
+
