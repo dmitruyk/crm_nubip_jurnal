@@ -148,59 +148,6 @@ class PhoneNumber(CoreModel):
     type = models.CharField(_('type'), choices=TYPES, max_length=5, null=True, blank=True, default='main')
 
 
-class UserProfile(CoreModel):
-    class Meta:
-        db_table = u'customer_profile_set'
-
-    uuid = models.UUIDField(default=uuid4, editable=False)
-
-    first_name = models.CharField(_('customer_first_name'), null=False, max_length=200, blank=False)
-
-    last_name = models.CharField(_('customer_last_name'), null=False, max_length=200, blank=False)
-
-    add_name = models.CharField(_('customer_add_name'), null=True, max_length=200, blank=True)
-
-    date_of_birth = models.DateField(_('date_of_birth'), default=None, null=False, blank=False)
-
-    passport = models.OneToOneField(
-        Passport,
-        related_name='contact_info',
-        on_delete=models.SET_NULL,
-        null=True
-    )
-
-    phone_number = models.OneToOneField(
-        PhoneNumber,
-        related_name='contact_info',
-        on_delete=models.SET_NULL,
-        null=True
-    )
-
-    scoring_score = models.PositiveIntegerField(_('scoring_score'), default=0)
-
-    # partner = models.ForeignKey(PartnerInfo,
-    #                             on_delete=models.CASCADE,
-    #                             null=False,
-    #                             blank=False,
-    #                             )
-
-    @property
-    def name(self):
-        if self.first_name and self.last_name:
-            return '{} {}'.format(self.first_name,
-                                  self.last_name)
-        elif self.first_name:
-            return '{}'.format(self.first_name)
-        else:
-            return None
-
-    # TODO add more fields in dic
-    def as_dict(self):
-        return {
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-        }
-
 
 # class Application(CoreModel):
 #     class Meta:
@@ -244,12 +191,27 @@ class UserProfile(CoreModel):
 #
 #         }
 
+
+    # def get_absolute_url(self):
+    #     """
+    #     Returns the url to access a particular author instance.
+    #     """
+    #     return reverse('author-detail', args=[str(self.id)])
+
+
+    # member = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
+
+
 class AcademicGroup(CoreModel):
     class Meta:
         verbose_name_plural = "Академічні групи"
 
     name = models.CharField(null=False, blank=False, max_length=25, default=None, verbose_name='Назва')
-    #member = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
+
+    member = models.ForeignKey(User, null=True, blank=True, default=None, on_delete=models.DO_NOTHING,
+                               verbose_name='Учасник')
+
+    # events = models.ManyToManyField(Event)
 
     def __str__(self):
         return self.name
@@ -263,21 +225,14 @@ class MemberGroup(CoreModel):
     member_group = models.ForeignKey(AcademicGroup, null=True, blank=True, default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
     member_user = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
 
-
-# class Lesson(CoreModel):
-#     class Meta:
-#         verbose_name = 'Пара'
-#         verbose_name_plural = 'Пары'
-#
-#     name = models.CharField(null=False, blank=False, max_length=25, default=None, verbose_name='Назва')
-#
-#     academic_group = models.ForeignKey(AcademicGroup, blank=True, default=None, on_delete=models.DO_NOTHING, verbose_name='Академічна група')
+from django.contrib.auth.models import AbstractUser
 
 
 class Event(models.Model):
     name = models.CharField(null=True, blank=True, max_length=25, default=None, verbose_name='Назва предмету')
     academic_group = models.ForeignKey(AcademicGroup, null=True, blank=True, default=None, on_delete=models.DO_NOTHING,
                                        verbose_name='Академічна група')
+
     day = models.DateField(u'Day of the event', help_text=u'Day of the event')
     start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     end_time = models.TimeField(u'Final time', help_text=u'Final time')
@@ -285,6 +240,16 @@ class Event(models.Model):
 
     def __str__(self):
         return f'{self.name}'
+
+    def students(self):
+        member_group = MemberGroup.objects.filter(member_group=self.academic_group)
+
+        return '33', '44'
+
+    def user(self):
+        #member_group = MemberGroup.objects.filter(member_group=self.academic_group)
+
+        return User.objects.all()
 
     class Meta:
         verbose_name = 'Розклад'
@@ -317,6 +282,86 @@ class Event(models.Model):
                     raise ValidationError(
                         'There is an overlap with another event: ' + str(event.day) + ', ' + str(
                             event.start_time) + '-' + str(event.end_time))
+
+
+# class AcademicGroupRelation(CoreModel):
+#     class Meta:
+#         verbose_name_plural = "Заняття"
+#
+#     one_academic_group = models.ForeignKey(AcademicGroup, null=True, blank=True, default=None,
+#                                            on_delete=models.DO_NOTHING,
+#                                            verbose_name='Конкретна Академічна група')
+#     one_event = models.ForeignKey(Event,null=True, blank=True, default=None,
+#                                            on_delete=models.DO_NOTHING,
+#                                        verbose_name='Заняття групи')
+
+
+class UserProfile(CoreModel):
+    class Meta:
+        db_table = u'customer_profile_set'
+
+    TYPES = (
+        ('sickness', 'Хворіє'),
+        ('important', 'Поважна'),
+        ('home', 'Home'),
+        ('other', 'Other')
+    )
+
+    user = models.OneToOneField(User, null=True, blank=True, default=None, on_delete=models.DO_NOTHING)
+
+    presence = models.BooleanField(default=False)
+
+    reason = models.CharField(_('reason'), choices=TYPES, max_length=30, null=True, blank=True, default=None)
+
+    additional_info = models.CharField(_('info'), null=True, max_length=200, blank=True)
+
+    events = models.ForeignKey(Event, null=True, blank=True, default=None, on_delete=models.DO_NOTHING,
+                                       verbose_name='ПАРИ')
+
+    # passport = models.OneToOneField(
+    #     Passport,
+    #     related_name='contact_info',
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    # )
+    #
+    # phone_number = models.OneToOneField(
+    #     PhoneNumber,
+    #     related_name='contact_info',
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    # )
+
+    #scoring_score = models.PositiveIntegerField(_('scoring_score'), default=0)
+
+    # partner = models.ForeignKey(PartnerInfo,
+    #                             on_delete=models.CASCADE,
+    #                             null=False,
+    #                             blank=False,
+    #                             )
+
+    def __str__(self):
+        return f'{self.name}'
+
+    @property
+    def name(self):
+        if self.user.first_name and self.user.last_name:
+            return '{} {}'.format(self.user.first_name,
+                                  self.user.last_name)
+        elif self.user.first_name:
+            return '{}'.format(self.user.first_name)
+        else:
+            return None
+
+    # TODO add more fields in dic
+    def as_dict(self):
+        return {
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+        }
+
 
 
 class AbstractModel(Event):
