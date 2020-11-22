@@ -101,6 +101,9 @@ class Department(CoreModel):
         if self.head.role != 'head_department':
             raise ValidationError('Завідувачем може бути тількт користувач з роллю Завідувач кафедри!')
 
+    def __str__(self):
+        return self.name
+
 
 class AcademicGroup(CoreModel):
     class Meta:
