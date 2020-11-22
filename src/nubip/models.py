@@ -130,8 +130,9 @@ class AcademicGroup(CoreModel):
                                    verbose_name='Базова каферда')
 
     def clean(self):
-        if self.curator.role != 'curator':
-            raise ValidationError('Куратором може бути тількт користувач з роллю Куратор!')
+        if self.curator:
+            if self.curator.role != 'curator':
+                raise ValidationError('Куратором може бути тількт користувач з роллю Куратор!')
 
     def __str__(self):
         return self.name
