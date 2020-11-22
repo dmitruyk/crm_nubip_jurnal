@@ -37,7 +37,7 @@ class ReportDataEventAdmin(admin.ModelAdmin):
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['name', 'head']
 
 
 class MemberGroupInline(admin.TabularInline):
