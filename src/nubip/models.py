@@ -12,6 +12,7 @@ from .user import User
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 
+
 class APIKey(CoreModel):
     name = models.CharField(null=False, blank=False, max_length=25, default=None)
     uuid = models.UUIDField(null=True, blank=True)
@@ -45,78 +46,6 @@ class APIClient(CoreModel):
         return self.login
 
 
-# class PartnerInfo(CoreModel):
-#     class Meta:
-#         db_table = u'partner_info'
-#
-#     user = models.ForeignKey(
-#         User,
-#         related_name='partner_info_user',
-#         on_delete=models.CASCADE
-#     )
-#
-#     name = models.CharField(_('name'), max_length=100, null=True, blank=True, default=None)
-#
-#     contract_number = models.CharField(_('contract_number'), max_length=20)
-
-
-# class CreditOrganizationInfo(CoreModel):
-#     class Meta:
-#         db_table = u'credit_organization_info'
-#
-#     user = models.OneToOneField(
-#         User,
-#         related_name='partner_info_credit_org',
-#         on_delete=models.CASCADE
-#     )
-#
-#     name = models.CharField(_('name'), max_length=100, null=True, blank=True, default=None)
-#
-#     contract_number = models.CharField(_('contract_number'), max_length=20)
-
-
-# class Offer(CoreModel):
-#     class Meta:
-#         db_table = u'offer'
-#
-#     KINDS = (
-#         ('companies', 'Companies'),
-#         ('products', 'Products')
-#     )
-#
-#     user = models.ForeignKey(
-#         User,
-#         related_name='user_offer_set',
-#         on_delete=models.CASCADE
-#     )
-#
-#     TYPES = (
-#         ('need', 'NEED'),
-#         ('mortgage', 'MORTGAGE'),
-#         ('car_loan', 'CAR LOAN'),
-#     )
-#
-#     uuid = models.UUIDField(default=uuid4, editable=False)
-#
-#     start_rotation = models.DateField(_('start_rotation'), default=None, null=False, blank=False)
-#
-#     end_rotation = models.DateField(_('start_rotation'), default=None, null=False, blank=False)
-#
-#     name = models.CharField(_('name'), max_length=100, null=True, blank=True, default=None)
-#
-#     type = models.CharField(_('type'), choices=TYPES, null=False, max_length=10, blank=False)
-#
-#     min_scoring_score = models.PositiveIntegerField(_('min_scoring_score'), default=0)
-#
-#     max_scoring_score = models.PositiveIntegerField(_('max_scoring_score'), default=0)
-#
-#     credit_organization = models.ForeignKey(CreditOrganizationInfo,
-#                                             on_delete=models.CASCADE,
-#                                             null=False,
-#                                             blank=False,
-#                                             )
-
-
 class Passport(CoreModel):
     class Meta:
         db_table = u'passport'
@@ -148,89 +77,97 @@ class PhoneNumber(CoreModel):
     type = models.CharField(_('type'), choices=TYPES, max_length=5, null=True, blank=True, default='main')
 
 
+class Department(CoreModel):
 
-# class Application(CoreModel):
-#     class Meta:
-#         db_table = u'application'
-#
-#     STATUS = (
-#         ('new', 'New'),
-#         ('sent', 'Sent'),
-#         ('received', 'Received'),
-#         ('approved', 'Approved'),
-#         ('refused', 'Refused'),
-#         ('issued', 'Isued'),
-#     )
-#
-#     creation_date = models.DateField(_('creation_date'), default=None, null=False, blank=False)
-#
-#     send = models.DateField(_('creation_date'), default=None, null=True, blank=True)
-#
-#     customer = models.ForeignKey(
-#         CustomerProfile,
-#         related_name='ap_customer',
-#         on_delete=models.CASCADE
-#     )
-#
-#     offer = models.ForeignKey(
-#         Offer,
-#         related_name='ap_offer',
-#         on_delete=models.CASCADE
-#     )
-#
-#     status = models.CharField(_('type'), choices=STATUS, null=True, blank=True, max_length=10, default='new')
-#
-#     # TODO add more fields in dic
-#     def as_dict(self):
-#         return {
-#             'creation_date': self.creation_date,
-#             'send': self.send,
-#             'customer': self.customer,
-#             'offer': self.offer,
-#             'status': self.status,
-#
-#         }
+    class Meta:
+        verbose_name_plural = "Кафери"
+        unique_together = ('name', 'head')
 
+    name = models.CharField(max_length=30,
+                            null=True,
+                            blank=True,
+                            default=None,
+                            verbose_name='Назва кафедри')
 
-    # def get_absolute_url(self):
-    #     """
-    #     Returns the url to access a particular author instance.
-    #     """
-    #     return reverse('author-detail', args=[str(self.id)])
+    head = models.ForeignKey(User,
+                             related_name='department_head',
+                             null=True,
+                             blank=True,
+                             default=None,
+                             on_delete=models.DO_NOTHING,
+                             verbose_name='Завідувач кафедри')
 
-
-    # member = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
+    def clean(self):
+        if self.head.role != 'head_department':
+            raise ValidationError('Завідувачем може бути тількт користувач з роллю Завідувач кафедри!')
 
 
 class AcademicGroup(CoreModel):
     class Meta:
         verbose_name_plural = "Академічні групи"
 
-    name = models.CharField(null=False, blank=False, max_length=25, default=None, verbose_name='Назва')
+    name = models.CharField(null=False,
+                            blank=False,
+                            max_length=25,
+                            default=None,
+                            verbose_name='Шифр групи')
 
-    member = models.ForeignKey(User, null=True, blank=True, default=None, on_delete=models.DO_NOTHING,
-                               verbose_name='Учасник')
+    curator = models.ForeignKey(User,
+                                null=True,
+                                blank=True,
+                                default=None,
+                                on_delete=models.DO_NOTHING,
+                                verbose_name='Куратор')
 
-    # events = models.ManyToManyField(Event)
+    department = models.ForeignKey(Department,
+                                   null=True,
+                                   blank=True,
+                                   default=None,
+                                   on_delete=models.DO_NOTHING,
+                                   verbose_name='Базова каферда')
+
+    def clean(self):
+        if self.curator.role != 'curator':
+            raise ValidationError('Куратором може бути тількт користувач з роллю Куратор!')
 
     def __str__(self):
         return self.name
 
 
 class MemberGroup(CoreModel):
+
     class Meta:
-        verbose_name_plural = "Учасники"
+        verbose_name_plural = "Члени групи"
         unique_together = ('member_group', 'member_user',)
 
-    member_group = models.ForeignKey(AcademicGroup, null=True, blank=True, default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
-    member_user = models.ForeignKey(User, null=True, blank=True,default=None, on_delete=models.DO_NOTHING, verbose_name='Учасник')
+    member_group = models.ForeignKey(AcademicGroup,
+                                     null=True,
+                                     blank=True,
+                                     default=None,
+                                     on_delete=models.DO_NOTHING,
+                                     verbose_name='Група Учасника')
 
-from django.contrib.auth.models import AbstractUser
+    member_user = models.ForeignKey(User,
+                                    null=True,
+                                    blank=True,
+                                    default=None,
+                                    on_delete=models.DO_NOTHING,
+                                    verbose_name='Учасник')
 
 
 class Event(models.Model):
-    name = models.CharField(null=True, blank=True, max_length=25, default=None, verbose_name='Назва предмету')
-    academic_group = models.ForeignKey(AcademicGroup, null=True, blank=True, default=None, on_delete=models.DO_NOTHING,
+
+    name = models.CharField(null=True,
+                            blank=True,
+                            max_length=25,
+                            default=None,
+                            verbose_name='Назва предмету')
+
+    academic_group = models.ForeignKey(AcademicGroup,
+                                       null=True,
+                                       blank=True,
+                                       default=None,
+                                       on_delete=models.DO_NOTHING,
                                        verbose_name='Академічна група')
 
     day = models.DateField(u'Day of the event', help_text=u'Day of the event')
@@ -246,10 +183,16 @@ class Event(models.Model):
 
         return '33', '44'
 
-    def user(self):
-        #member_group = MemberGroup.objects.filter(member_group=self.academic_group)
+    def users(self):
 
         return User.objects.all()
+
+    def _is_rapport_exists(self):
+        if ReportUserEvent.objects.filter(report_event=self).exists():
+            return True
+        return False
+    _is_rapport_exists.boolean = True
+    is_rapport_exists = property(_is_rapport_exists)
 
     class Meta:
         verbose_name = 'Розклад'
@@ -267,80 +210,70 @@ class Event(models.Model):
 
         return overlap
 
-    def get_absolute_url(self):
-        url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-        return u'<a href="%s">%s</a>' % (url, str(self.start_time.strftime("%H:%M"))+'-'+str(self.end_time.strftime("%H:%M"))+' '+str(self.name)+' '+str(self.academic_group))
+    # def get_absolute_url(self):
+    #     url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
+    #     return u'<a href="%s">%s</a>' % (url, str(self.start_time.strftime("%H:%M"))+'-'+str(self.end_time.strftime("%H:%M"))+' '+str(self.name)+' '+str(self.academic_group))
 
-    def clean(self):
-        if self.end_time <= self.start_time:
-            raise ValidationError('Ending times must after starting times')
+    # def clean(self):
+    #     if self.end_time <= self.start_time:
+    #         raise ValidationError('Ending times must after starting times')
 
-        events = Event.objects.filter(day=self.day, academic_group=self.academic_group)
-        if events.exists():
-            for event in events:
-                if self.check_overlap(event.start_time, event.end_time, self.start_time, self.end_time):
-                    raise ValidationError(
-                        'There is an overlap with another event: ' + str(event.day) + ', ' + str(
-                            event.start_time) + '-' + str(event.end_time))
+        from django.http import HttpResponse
+        if hasattr(self, 'user'):
+            if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user).exists():
+                html = f'<html><body>Report for {self.name}, created by {self.user} already exists!</body></html>'
+                print('ppp')
+                return HttpResponse(html)
+                #raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
+
+        # if ReportUserEvent.objects.filter(report_event=self).exists():
+        #     print(self.user)
+        #     raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
+        # print('2222')
 
 
-# class AcademicGroupRelation(CoreModel):
-#     class Meta:
-#         verbose_name_plural = "Заняття"
-#
-#     one_academic_group = models.ForeignKey(AcademicGroup, null=True, blank=True, default=None,
-#                                            on_delete=models.DO_NOTHING,
-#                                            verbose_name='Конкретна Академічна група')
-#     one_event = models.ForeignKey(Event,null=True, blank=True, default=None,
-#                                            on_delete=models.DO_NOTHING,
-#                                        verbose_name='Заняття групи')
+
+        # events = Event.objects.filter(day=self.day, academic_group=self.academic_group)
+        # if events.exists():
+        #     for event in events:
+        #         if self.check_overlap(event.start_time, event.end_time, self.start_time, self.end_time):
+        #             raise ValidationError(
+        #                 'There is an overlap with another event: ' + str(event.day) + ', ' + str(
+        #                     event.start_time) + '-' + str(event.end_time))
+
+    def save(self, *args, **kwargs):
+        if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
+            raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
+
+        if self.academic_group and self.user.is_superuser:
+            super().save(*args, **kwargs)
+            UserEvent.objects.filter(event=self).delete()
+            students = MemberGroup.objects.filter(member_group=self.academic_group)
+            for student in students:
+                user = UserProfile.objects.filter(user=student.member_user).first()
+                if user is not None:
+                    UserEvent.objects.update_or_create(event=self, user=user)
+        else:
+            user_events = UserEvent.objects.filter(event=self)
+            new_event_report = ReportUserEvent.objects.create(report_event=self,
+                                                              report_creator=self.user,
+                                                              )
+            for event in user_events:
+                ReportDataEvent.objects.create(
+                    report_data_user_data=new_event_report,
+                    report_user=event.user.user,
+                    report_presence=event.presence,
+                    report_reason=event.reason,
+                    report_additional_info=event.additional_info
+                    )
 
 
 class UserProfile(CoreModel):
     class Meta:
         db_table = u'customer_profile_set'
-
-    TYPES = (
-        ('sickness', 'Хворіє'),
-        ('important', 'Поважна'),
-        ('home', 'Home'),
-        ('other', 'Other')
-    )
+        verbose_name_plural = "Профайли користувачів"
 
     user = models.OneToOneField(User, null=True, blank=True, default=None, on_delete=models.DO_NOTHING)
-
-    presence = models.BooleanField(default=False)
-
-    reason = models.CharField(_('reason'), choices=TYPES, max_length=30, null=True, blank=True, default=None)
-
-    additional_info = models.CharField(_('info'), null=True, max_length=200, blank=True)
-
-    events = models.ForeignKey(Event, null=True, blank=True, default=None, on_delete=models.DO_NOTHING,
-                                       verbose_name='ПАРИ')
-
-    # passport = models.OneToOneField(
-    #     Passport,
-    #     related_name='contact_info',
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True,
-    # )
-    #
-    # phone_number = models.OneToOneField(
-    #     PhoneNumber,
-    #     related_name='contact_info',
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True,
-    # )
-
-    #scoring_score = models.PositiveIntegerField(_('scoring_score'), default=0)
-
-    # partner = models.ForeignKey(PartnerInfo,
-    #                             on_delete=models.CASCADE,
-    #                             null=False,
-    #                             blank=False,
-    #                             )
 
     def __str__(self):
         return f'{self.name}'
@@ -363,10 +296,113 @@ class UserProfile(CoreModel):
         }
 
 
+class UserEvent(CoreModel):
+
+    TYPES = (
+        ('sickness', 'Хворіє'),
+        ('important', 'Поважна'),
+        ('home', 'Home'),
+        ('other', 'Other')
+    )
+
+    class Meta:
+        verbose_name_plural = "Заняття користувача"
+        unique_together = ('event', 'user',)
+
+    event = models.ForeignKey(Event,
+                              null=True,
+                              blank=True,
+                              default=None,
+                              on_delete=models.CASCADE,
+                              verbose_name='Учасник')
+
+    user = models.ForeignKey(UserProfile,
+                             null=True,
+                             blank=True,
+                             default=None,
+                             on_delete=models.DO_NOTHING,
+                             verbose_name='Учасник')
+
+    presence = models.BooleanField(default=False,
+                                   verbose_name='Присутність')
+
+    reason = models.CharField(choices=TYPES,
+                              max_length=30,
+                              null=True,
+                              blank=True,
+                              default=None,
+                              verbose_name='Причина відсутності')
+
+    additional_info = models.CharField(null=True,
+                                       max_length=200,
+                                       blank=True,
+                                       verbose_name='Додаткова інформація')
+
+
+class ReportUserEvent(CoreModel):
+
+    class Meta:
+        verbose_name_plural = "Звіти"
+
+    report_event = models.ForeignKey(Event,
+                                     related_name='report_event',
+                                     null=True,
+                                     blank=True,
+                                     default=None,
+                                     on_delete=models.DO_NOTHING)
+
+    report_creator = models.ForeignKey(User,
+                                       related_name='report_creator',
+                                       null=True,
+                                       blank=True,
+                                       default=None,
+                                       on_delete=models.DO_NOTHING)
+
+
+class ReportDataEvent(CoreModel):
+
+    class Meta:
+        verbose_name_plural = "Дані звітів"
+
+    TYPES = (
+        ('sickness', 'Хворіє'),
+        ('important', 'Поважна'),
+        ('home', 'Home'),
+        ('other', 'Other')
+        )
+
+    report_data_user_data = models.ForeignKey(ReportUserEvent,
+                                              related_name='report_data_user_data',
+                                              null=True,
+                                              blank=True,
+                                              default=None,
+                                              on_delete=models.DO_NOTHING)
+
+    report_user = models.ForeignKey(User,
+                                    related_name='report_user',
+                                    null=True,
+                                    blank=True,
+                                    default=None,
+                                    on_delete=models.DO_NOTHING)
+
+    report_presence = models.BooleanField(default=False)
+
+    report_reason = models.CharField(choices=TYPES,
+                                     max_length=30,
+                                     null=True,
+                                     blank=True,
+                                     default=None,
+                                     verbose_name='Причина відсутності')
+
+    report_additional_info = models.CharField(null=True,
+                                              max_length=200,
+                                              blank=True,
+                                              verbose_name='Додаткова інформація')
+
 
 class AbstractModel(Event):
     class Meta:
-        verbose_name_plural = "Як Список"
+        verbose_name_plural = "Звіт"
 
     def __str__(self):
         return f'{self.name}'
