@@ -95,6 +95,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
         )
         return queryset
 
+
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
@@ -102,7 +103,7 @@ class CustomUserAdmin(UserAdmin):
     model = User
     list_display = ('name', 'is_staff', 'is_active', 'role')
     fieldsets = (
-        (None, {'fields': ('email', 'first_name', 'last_name', 'password', 'role', 'user_permissions', 'groups')}),
+        (None, {'fields': ('username', 'first_name', 'last_name', 'password', 'role', 'user_permissions', 'groups')}),
         ('Permissions', {'fields': ('is_staff', 'is_active')}),
     )
     # add_fieldsets = (
