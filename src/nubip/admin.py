@@ -124,7 +124,7 @@ class ReportUserEventAdmin(admin.ModelAdmin):
             ReportDataEventInline,
         ]
     list_display = ['report_creator', 'role', 'report_event', 'group', 'count']
-    date_hierarchy = 'created'
+    date_hierarchy = 'report_event__day'
 
     def count(self, obj):
         all_users = ReportDataEvent.objects.filter(report_data_user_data=obj).count()
