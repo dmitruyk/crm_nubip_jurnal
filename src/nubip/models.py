@@ -247,7 +247,7 @@ class Event(models.Model):
 
     def save(self, *args, **kwargs):
         if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
-            raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
+            raise ValidationError(f'Звіт для {self.name}, від {self.user} вже подано! ')
 
         if self.academic_group and self.user.is_superuser:
             super().save(*args, **kwargs)
@@ -270,9 +270,10 @@ class Event(models.Model):
                     report_reason=event.reason,
                     report_additional_info=event.additional_info
                     )
-                Event.objects.filter(pk=event.id).update(presence=False,
-                                                         reason=None,
-                                                         additional_info=None)
+                profile = UserProfile.objects.filter(user=event.user.user).first()
+                UserEvent.objects.filter(event=self, user=profile).update(presence=False,
+                                                                          reason=None,
+                                                                          additional_info=None)
 
 
 class UserProfile(CoreModel):

@@ -20,6 +20,7 @@ from .models import *
 @admin.register(MemberGroup)
 class MemberGroupAdmin(admin.ModelAdmin):
     list_display = ['member_group', 'get_role']
+    ordering = ['member_user__last_name']
 
     def get_role(self, obj):
         return None
