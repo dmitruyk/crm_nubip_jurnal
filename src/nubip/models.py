@@ -270,6 +270,9 @@ class Event(models.Model):
                     report_reason=event.reason,
                     report_additional_info=event.additional_info
                     )
+                Event.objects.filter(pk=event.id).update(presence=False,
+                                                         reason=None,
+                                                         additional_info=None)
 
 
 class UserProfile(CoreModel):
