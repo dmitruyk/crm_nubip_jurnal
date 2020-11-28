@@ -138,6 +138,48 @@ class AcademicGroup(CoreModel):
         return self.name
 
 
+class LectureName(CoreModel):
+
+    class Meta:
+        verbose_name_plural = "Предмет"
+        unique_together = ('name', 'teacher',)
+
+    name = models.CharField(null=True,
+                            blank=True,
+                            max_length=25,
+                            default=None,
+                            verbose_name='Назва предмету')
+
+    teacher = models.ForeignKey(User,
+                                null=True,
+                                blank=True,
+                                default=None,
+                                on_delete=models.DO_NOTHING,
+                                verbose_name='Викладач')
+
+    def clean(self):
+        if self.teacher.role != 'teacher':
+            raise ValidationError('Викладачем може бути тількт користувач з роллю Викладач!')
+
+    def __str__(self):
+        return f'Предмет: {self.name}. Викладач: {self.teacher}'
+
+
+class Lecture(CoreModel):
+
+    class Meta:
+        verbose_name_plural = "Порядок занять"
+
+    name = models.CharField(null=True,
+                            blank=True,
+                            max_length=25,
+                            default=None,
+                            verbose_name='Номер по порядку')
+
+    def __str__(self):
+        return self.name
+
+
 class MemberGroup(CoreModel):
 
     class Meta:
@@ -161,11 +203,12 @@ class MemberGroup(CoreModel):
 
 class Event(models.Model):
 
-    name = models.CharField(null=True,
-                            blank=True,
-                            max_length=25,
-                            default=None,
-                            verbose_name='Назва предмету')
+    lecture = models.ForeignKey(LectureName,
+                                null=True,
+                                blank=True,
+                                default=None,
+                                on_delete=models.DO_NOTHING,
+                                verbose_name='Назва предмету')
 
     academic_group = models.ForeignKey(AcademicGroup,
                                        null=True,
@@ -174,13 +217,21 @@ class Event(models.Model):
                                        on_delete=models.DO_NOTHING,
                                        verbose_name='Академічна група')
 
+    index_number = models.ForeignKey(Lecture,
+                                     null=True,
+                                     blank=True,
+                                     default=None,
+                                     on_delete=models.DO_NOTHING,
+                                     verbose_name='Заняття за розкладом')
+
+
     day = models.DateField(u'Day of the event', help_text=u'Day of the event')
-    start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
-    end_time = models.TimeField(u'Final time', help_text=u'Final time')
+    #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
+    #end_time = models.TimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.lecture}'
 
     def students(self):
         member_group = MemberGroup.objects.filter(member_group=self.academic_group)
@@ -225,7 +276,7 @@ class Event(models.Model):
         from django.http import HttpResponse
         if hasattr(self, 'user'):
             if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user).exists():
-                html = f'<html><body>Report for {self.name}, created by {self.user} already exists!</body></html>'
+                html = f'<html><body>Report for {self.lecture}, created by {self.user} already exists!</body></html>'
                 print('ppp')
                 return HttpResponse(html)
                 #raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
@@ -247,10 +298,9 @@ class Event(models.Model):
 
     def save(self, *args, **kwargs):
         if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
-            raise ValidationError(f'Звіт для {self.name}, від {self.user} вже подано! ')
-
+            raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
+        super().save(*args, **kwargs)
         if self.academic_group and self.user.is_superuser:
-            super().save(*args, **kwargs)
             UserEvent.objects.filter(event=self).delete()
             students = MemberGroup.objects.filter(member_group=self.academic_group)
             for student in students:
@@ -262,18 +312,17 @@ class Event(models.Model):
             new_event_report = ReportUserEvent.objects.create(report_event=self,
                                                               report_creator=self.user,
                                                               )
+            #print(user_events)
             for event in user_events:
                 ReportDataEvent.objects.create(
                     report_data_user_data=new_event_report,
                     report_user=event.user.user,
-                    report_presence=event.presence,
-                    report_reason=event.reason,
-                    report_additional_info=event.additional_info
                     )
-                profile = UserProfile.objects.filter(user=event.user.user).first()
-                UserEvent.objects.filter(event=self, user=profile).update(presence=False,
-                                                                          reason=None,
-                                                                          additional_info=None)
+                # profile = UserProfile.objects.filter(user=event.user.user).first()
+                #
+                # UserEvent.objects.filter(event=self).update(presence=False,
+                #                                                           reason=None,
+                #                                                           additional_info=None)
 
 
 class UserProfile(CoreModel):
@@ -345,6 +394,17 @@ class UserEvent(CoreModel):
                                        max_length=200,
                                        blank=True,
                                        verbose_name='Додаткова інформація')
+
+    def save(self, *args, **kwargs):
+        report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
+        ReportDataEvent.objects.update(
+            report_data_user_data=report_event,
+            report_user=self.user.user,
+            report_presence=self.presence,
+            report_reason=self.reason,
+            report_additional_info=self.additional_info
+        )
+
 
 
 class ReportUserEvent(CoreModel):

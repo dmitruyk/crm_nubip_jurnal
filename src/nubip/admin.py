@@ -36,6 +36,21 @@ class ReportDataEventAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(Lecture)
+class LectureAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(LectureName)
+class LectureNameAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(UserEvent)
+class UserEventAdmin(admin.ModelAdmin):
+    pass
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ['name', 'head']
@@ -160,7 +175,7 @@ class ReportUserEventAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     form = MyCustomForm
-    list_display = ['name', 'day']
+    list_display = ['lecture', 'day']
     date_hierarchy = 'day'
     inlines = [
             UserEventInline,
