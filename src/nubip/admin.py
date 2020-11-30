@@ -46,9 +46,9 @@ class LectureNameAdmin(admin.ModelAdmin):
     pass
 
 
-# @admin.register(UserEvent)
-# class UserEventAdmin(admin.ModelAdmin):
-#     pass
+@admin.register(UserEvent)
+class UserEventAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(Department)

@@ -305,8 +305,9 @@ class Event(models.Model):
             students = MemberGroup.objects.filter(member_group=self.academic_group)
             for student in students:
                 user = UserProfile.objects.filter(user=student.member_user).first()
-                if user is not None:
-                    UserEvent.objects.update_or_create(event=self, user=user)
+                if user:
+                    g, _ = UserEvent.objects.update_or_create(event=self, user=user)
+
         else:
             user_events = UserEvent.objects.filter(event=self)
             new_event_report = ReportUserEvent.objects.create(report_event=self,
@@ -400,6 +401,7 @@ class UserEvent(CoreModel):
 
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
         if not ReportDataEvent.objects.filter(
             report_data_user_data=report_event,
@@ -412,6 +414,10 @@ class UserEvent(CoreModel):
                 report_reason=self.reason,
                 report_additional_info=self.additional_info
             )
+        UserEvent.objects.filter(pk=self.id).update(presence=False,
+                                                    reason=None,
+                                                    additional_info=None)
+
 
 
 class ReportUserEvent(CoreModel):
@@ -434,7 +440,7 @@ class ReportUserEvent(CoreModel):
                                        on_delete=models.DO_NOTHING)
 
     def __str__(self):
-        return f'Звіт {self.report_event.name}'
+        return f'Звіт {self.report_event}'
 
 
 class ReportDataEvent(CoreModel):
