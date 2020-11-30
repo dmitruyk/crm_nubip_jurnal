@@ -18,7 +18,7 @@ class CustomUserChangeForm(UserChangeForm):
 class MyCustomForm(ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')  # To get request.user. Do not use kwargs.pop('user', None) due to potential security hole
-        print(self.user, '11111111111')
+        #print(self.user, '11111111111')
         super(MyCustomForm, self).__init__(*args, **kwargs)
 
         # # If the user does not belong to a certain group, remove the field

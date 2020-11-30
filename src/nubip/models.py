@@ -277,7 +277,7 @@ class Event(models.Model):
         if hasattr(self, 'user'):
             if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user).exists():
                 html = f'<html><body>Report for {self.lecture}, created by {self.user} already exists!</body></html>'
-                print('ppp')
+                #print('ppp')
                 return HttpResponse(html)
                 #raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
 

@@ -17,16 +17,16 @@ def basic_auth(func):
     def wrapper(*args, **kwargs):
         request = next(a for a in args if isinstance(a, HttpRequest))
         login, password = None, None
-        print(str(request))
+        #print(str(request))
         if 'HTTP_AUTHORIZATION' in request.META:
             auth = request.META['HTTP_AUTHORIZATION'].split()
             if len(auth) == 2 and auth[0].lower() == 'basic':
                 login, password = base64.b64decode(auth[1]).split(b':')
         if login and password:
-            print(login, password)
+            #print(login, password)
             try:
                 user = User.objects.get(username=login.decode('ascii'), is_active=True)
-                print(user)
+                #print(user)
                 if not password.decode('ascii') == user.password:
                     return HttpResponseForbidden()
                 request.user = user
