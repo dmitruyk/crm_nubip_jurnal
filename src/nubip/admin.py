@@ -242,10 +242,17 @@ class EventAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
             queryset = queryset.filter()
-        else:
+        elif request.user.role == 'student':
             member = MemberGroup.objects.filter(member_user=request.user).first()
             if member:
                 queryset = queryset.filter(academic_group=member.member_group)
+        elif request.user.role == 'teacher':
+            queryset = queryset.filter(lecture__teacher=request.user)
+        # elif request.user.role == 'head_department':
+        #     queryset = queryset.filter(lecture__teacher=request.user)
+        #
+        #     head_department
+        #     lecture
 
         return queryset
 
