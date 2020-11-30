@@ -46,9 +46,9 @@ class LectureNameAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(UserEvent)
-class UserEventAdmin(admin.ModelAdmin):
-    pass
+# @admin.register(UserEvent)
+# class UserEventAdmin(admin.ModelAdmin):
+#     pass
 
 
 @admin.register(Department)
@@ -225,6 +225,7 @@ class EventAdmin(admin.ModelAdmin):
     #     (None,               {'fields': ['name']}),
     #     ('Date information', {'fields': ['academic_group'], 'classes': ['notes']}),
     # ]
+
 
     def changelist_view(self, request, extra_context=None):
         if request.GET:
