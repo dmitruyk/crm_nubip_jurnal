@@ -225,7 +225,7 @@ class Event(models.Model):
                                      verbose_name='Заняття за розкладом')
 
 
-    day = models.DateField(u'Day of the event', help_text=u'Day of the event')
+    day = models.DateField(u'Дата проведення', help_text=u'Рік місяць число')
     #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     #end_time = models.TimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
@@ -313,11 +313,11 @@ class Event(models.Model):
                                                               report_creator=self.user,
                                                               )
             #print(user_events)
-            for event in user_events:
-                ReportDataEvent.objects.create(
-                    report_data_user_data=new_event_report,
-                    report_user=event.user.user,
-                    )
+            # for event in user_events:
+            #     ReportDataEvent.objects.create(
+            #         report_data_user_data=new_event_report,
+            #         report_user=event.user.user,
+            #         )
                 # profile = UserProfile.objects.filter(user=event.user.user).first()
                 #
                 # UserEvent.objects.filter(event=self).update(presence=False,
@@ -395,16 +395,23 @@ class UserEvent(CoreModel):
                                        blank=True,
                                        verbose_name='Додаткова інформація')
 
+    def __str__(self):
+        return f'{self.user} -> {self.event.lecture.name}'
+
+
     def save(self, *args, **kwargs):
         report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
-        ReportDataEvent.objects.update(
+        if not ReportDataEvent.objects.filter(
             report_data_user_data=report_event,
-            report_user=self.user.user,
-            report_presence=self.presence,
-            report_reason=self.reason,
-            report_additional_info=self.additional_info
-        )
-
+            report_user=self.user.user
+        ).exists():
+            ReportDataEvent.objects.create(
+                report_data_user_data=report_event,
+                report_user=self.user.user,
+                report_presence=self.presence,
+                report_reason=self.reason,
+                report_additional_info=self.additional_info
+            )
 
 
 class ReportUserEvent(CoreModel):
@@ -425,6 +432,9 @@ class ReportUserEvent(CoreModel):
                                        blank=True,
                                        default=None,
                                        on_delete=models.DO_NOTHING)
+
+    def __str__(self):
+        return f'Звіт {self.report_event.name}'
 
 
 class ReportDataEvent(CoreModel):

@@ -46,9 +46,9 @@ class LectureNameAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(UserEvent)
-class UserEventAdmin(admin.ModelAdmin):
-    pass
+# @admin.register(UserEvent)
+# class UserEventAdmin(admin.ModelAdmin):
+#     pass
 
 
 @admin.register(Department)
@@ -60,6 +60,7 @@ class MemberGroupInline(admin.TabularInline):
     model = MemberGroup
     extra = 0
     ordering = ['member_user__last_name']
+    raw_id_fields = ('member_user',)
 
 
 class UserProfileInline(admin.TabularInline):
@@ -88,6 +89,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
         ]
     list_display = ['name', 'students_count', 'curator', 'department']
     list_filter = ('name',)
+    raw_id_fields = ('curator',)
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super(AcademicGroupAdmin, self).get_search_results(request, queryset, search_term)
@@ -128,7 +130,7 @@ class CustomUserAdmin(UserAdmin):
     #         'fields': ('name', 'password1', 'password2', 'is_staff', 'is_active', 'role', 'groups')}
     #     ),
     #  )
-    search_fields = ('email',)
+    search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
 
 
@@ -175,7 +177,7 @@ class ReportUserEventAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     form = MyCustomForm
-    list_display = ['lecture', 'day']
+    list_display = ['lecture', 'index_number', 'day']
     date_hierarchy = 'day'
     inlines = [
             UserEventInline,
