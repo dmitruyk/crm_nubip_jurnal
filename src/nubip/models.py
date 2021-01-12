@@ -109,11 +109,27 @@ class AcademicGroup(CoreModel):
     class Meta:
         verbose_name_plural = "Академічні групи"
 
+    COURSE = (
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4')
+    )
+
     name = models.CharField(null=False,
                             blank=False,
                             max_length=25,
                             default=None,
                             verbose_name='Шифр групи')
+
+    course = models.CharField(
+        null=True,
+        blank=True,
+        default=None,
+        max_length=32,
+        choices=COURSE,
+        verbose_name='Курс'
+    )
 
     curator = models.ForeignKey(User,
                                 null=True,
@@ -129,6 +145,7 @@ class AcademicGroup(CoreModel):
                                    on_delete=models.DO_NOTHING,
                                    verbose_name='Базова каферда')
 
+
     def clean(self):
         if self.curator:
             if self.curator.role != 'curator':
@@ -141,7 +158,7 @@ class AcademicGroup(CoreModel):
 class LectureName(CoreModel):
 
     class Meta:
-        verbose_name_plural = "Предмет"
+        verbose_name_plural = "Перелік дисциплін"
         unique_together = ('name', 'teacher',)
 
     name = models.CharField(null=True,
@@ -168,7 +185,7 @@ class LectureName(CoreModel):
 class Lecture(CoreModel):
 
     class Meta:
-        verbose_name_plural = "Порядок занять"
+        verbose_name_plural = "Календар занять"
 
     name = models.CharField(null=True,
                             blank=True,

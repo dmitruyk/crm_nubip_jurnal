@@ -88,11 +88,12 @@ class AcademicGroupAdmin(admin.ModelAdmin):
             MemberGroupInline,
         ]
     list_display = ['name', 'students_count', 'curator', 'department']
-    list_filter = ('name',)
+    list_filter = ('name', 'course')
     raw_id_fields = ('curator',)
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super(AcademicGroupAdmin, self).get_search_results(request, queryset, search_term)
+        print(search_term)
         try:
             # search_term_as_int = int(search_term)
             # queryset |= self.model.objects.filter(age=search_term_as_int)
@@ -137,7 +138,7 @@ class CustomUserAdmin(UserAdmin):
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
-    #list_filter = ('member__role',)
+    list_filter = ('report_event__lecture',)
     inlines = [
             ReportDataEventInline,
         ]
