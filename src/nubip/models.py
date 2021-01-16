@@ -375,7 +375,7 @@ class UserEvent(CoreModel):
     TYPES = (
         ('sickness', 'Хворіє'),
         ('important', 'Поважна'),
-        ('home', 'Сімецні обставини'),
+        ('home', 'Сімейні обставини'),
         ('other', 'Інше')
     )
 
