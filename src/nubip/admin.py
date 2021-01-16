@@ -93,7 +93,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super(AcademicGroupAdmin, self).get_search_results(request, queryset, search_term)
-        print(search_term)
+       # print(search_term)
         try:
             # search_term_as_int = int(search_term)
             # queryset |= self.model.objects.filter(age=search_term_as_int)

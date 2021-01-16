@@ -83,7 +83,7 @@ class Department(CoreModel):
         verbose_name_plural = "Кафери"
         unique_together = ('name', 'head')
 
-    name = models.CharField(max_length=30,
+    name = models.CharField(max_length=500,
                             null=True,
                             blank=True,
                             default=None,
