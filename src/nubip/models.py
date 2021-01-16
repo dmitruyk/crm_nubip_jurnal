@@ -145,11 +145,10 @@ class AcademicGroup(CoreModel):
                                    on_delete=models.DO_NOTHING,
                                    verbose_name='Базова каферда')
 
-
     def clean(self):
         if self.curator:
-            if self.curator.role != 'curator':
-                raise ValidationError('Куратором може бути тількт користувач з роллю Куратор!')
+            if self.curator.role not in ['teacher', 'curator']:
+                raise ValidationError('Куратором може бути тількт користувач з роллю Куратор або Викладач!')
 
     def __str__(self):
         return self.name
@@ -175,8 +174,8 @@ class LectureName(CoreModel):
                                 verbose_name='Викладач')
 
     def clean(self):
-        if self.teacher.role != 'teacher':
-            raise ValidationError('Викладачем може бути тількт користувач з роллю Викладач!')
+        if self.teacher.role not in ['teacher', 'curator', 'head_department']:
+            raise ValidationError('Викладачем може бути тількт користувач з роллю Викладач, Куратор або Завідувач!')
 
     def __str__(self):
         return f'Предмет: {self.name}. Викладач: {self.teacher}'
@@ -376,8 +375,8 @@ class UserEvent(CoreModel):
     TYPES = (
         ('sickness', 'Хворіє'),
         ('important', 'Поважна'),
-        ('home', 'Home'),
-        ('other', 'Other')
+        ('home', 'Сімецні обставини'),
+        ('other', 'Інше')
     )
 
     class Meta:
@@ -415,7 +414,6 @@ class UserEvent(CoreModel):
 
     def __str__(self):
         return f'{self.user} -> {self.event.lecture.name}'
-
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
