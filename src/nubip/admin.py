@@ -5,6 +5,9 @@ from calendar import HTMLCalendar
 from django.utils.safestring import mark_safe
 from .utils.calendar import EventCalendar
 
+from datetime import date
+
+from django.utils.translation import ugettext_lazy as _
 from urllib.parse import urlencode
 from django.shortcuts import redirect
 from django.core.exceptions import ValidationError
@@ -135,15 +138,67 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
 
 
+# from django.contrib.admin.filters import RelatedFieldListFilter
+#
+#
+# class AcademicGroupFilter(RelatedFieldListFilter):
+#     def __init__(self, field, request, *args, **kwargs):
+#         """Get the species you want to limit it to.
+#         This could be determined by the request,
+#         But in this example we'll just specify an
+#         arbitrary species"""
+#         species = AcademicGroup.objects.all()
+#
+#         #Limit the choices on the field
+#         field.remote_field.limit_choices_to = {'department__academic_group': species}
+#
+#         #Let the RelatedFieldListFilter do its magic
+#         super(AcademicGroupFilter, self).__init__(field, request, *args, **kwargs)
+class EventListFilter(admin.SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = _('Академічна група')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'academic_group'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+
+        department = Department.objects.filter(head=request.user).first()
+        academic_groups = AcademicGroup.objects.filter(department=department)
+        return ((academic_group.id, academic_group.name) for academic_group in academic_groups)
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        # Compare the requested value
+        if self.value() == '-0-0-0-0-0':
+            pass
+        return queryset.filter(report_event__academic_group=self.value())
+
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
-    list_filter = ('report_event__lecture',)
+    list_filter = ('report_event__lecture', EventListFilter,)
     inlines = [
             ReportDataEventInline,
         ]
-    list_display = ['report_creator', 'role', 'report_event', 'group', 'count']
+    list_display = ['report_creator', 'role', 'created', 'report_event', 'group', 'count']
     date_hierarchy = 'report_event__day'
+
+    def _role(self, obj):
+        print(obj.report_creator.role)
+        return 'lll'
 
     def count(self, obj):
         all_users = ReportDataEvent.objects.filter(report_data_user_data=obj).count()
@@ -170,7 +225,7 @@ class ReportUserEventAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             queryset = queryset.filter()
         else:
-            queryset = queryset.filter(department__head=request.user)
+            queryset = queryset.filter(report_event__academic_group__department__head=request.user)
 
         return queryset
 
@@ -178,7 +233,7 @@ class ReportUserEventAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     form = MyCustomForm
-    list_display = ['lecture', 'index_number', 'day']
+    list_display = ['lecture', 'index_number', 'day', 'custom_column']
     date_hierarchy = 'day'
     inlines = [
             UserEventInline,
@@ -192,6 +247,31 @@ class EventAdmin(admin.ModelAdmin):
     #     ('Date information', {'fields': ['students'], 'classes': ['notes']}),
     # ]
 
+    # define the row x column value here
+    def custom_column(self, obj):
+        from django.utils.html import format_html
+        request = getattr(self, 'request', None)
+        if request:
+            if ReportUserEvent.objects.filter(report_event=obj, report_creator=request.user).exists():
+                return format_html(
+                    '<span style="color: #{};">{}</span>',
+                    '6be073',
+                    'Подано',
+                )
+            else:
+                return format_html(
+                    '<span style="color: #{};">{}</span>',
+                    'ff5733',
+                    'НЕ Подано',
+                )
+
+        #00ff13
+        # retval = ('green.jpg', 'This location checked in less than 5 minutes ago')
+        # return format_html('<img src={} alt={} />', 'img/large-green-square-4336.png',
+        #                    'This location checked in less than 5 minutes ago')
+
+    # set the column heading here
+    custom_column.short_description = 'Status'
 
     def clean_name(self):
         if True:
@@ -229,6 +309,7 @@ class EventAdmin(admin.ModelAdmin):
 
 
     def changelist_view(self, request, extra_context=None):
+        self.request = request
         if request.GET:
             return super().changelist_view(request, extra_context=extra_context)
 
@@ -248,10 +329,10 @@ class EventAdmin(admin.ModelAdmin):
             member = MemberGroup.objects.filter(member_user=request.user).first()
             if member:
                 queryset = queryset.filter(academic_group=member.member_group)
-        elif request.user.role == 'teacher':
-            queryset = queryset.filter(lecture__teacher=request.user)
+        elif request.user.role in ['teacher', 'curator']:
+            queryset = queryset.filter(Q(lecture__teacher=request.user) | Q(academic_group__curator=request.user))
         else:
-            queryset.none()
+            return queryset.none()
         #     queryset = []
         # elif request.user.role == 'head_department':
         #     queryset = queryset.filter(lecture__teacher=request.user)
