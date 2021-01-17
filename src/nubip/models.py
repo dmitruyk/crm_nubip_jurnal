@@ -442,6 +442,7 @@ class ReportUserEvent(CoreModel):
 
     report_event = models.ForeignKey(Event,
                                      related_name='report_event',
+                                     verbose_name='Дисципліна',
                                      null=True,
                                      blank=True,
                                      default=None,
@@ -449,6 +450,7 @@ class ReportUserEvent(CoreModel):
 
     report_creator = models.ForeignKey(User,
                                        related_name='report_creator',
+                                       verbose_name='Звіт створив',
                                        null=True,
                                        blank=True,
                                        default=None,

@@ -170,9 +170,11 @@ class EventListFilter(admin.SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-
-        department = Department.objects.filter(head=request.user).first()
-        academic_groups = AcademicGroup.objects.filter(department=department)
+        if request.user.is_superuser:
+            academic_groups = AcademicGroup.objects.all()
+        else:
+            department = Department.objects.filter(head=request.user).first()
+            academic_groups = AcademicGroup.objects.filter(department=department)
         return ((academic_group.id, academic_group.name) for academic_group in academic_groups)
 
     def queryset(self, request, queryset):
@@ -182,10 +184,10 @@ class EventListFilter(admin.SimpleListFilter):
         `self.value()`.
         """
         # Compare the requested value
-        if self.value() == '-0-0-0-0-0':
-            pass
-        return queryset.filter(report_event__academic_group=self.value())
-
+        if self.value():
+            return queryset.filter(report_event__academic_group=self.value())
+        else:
+            return queryset
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
@@ -193,32 +195,36 @@ class ReportUserEventAdmin(admin.ModelAdmin):
     inlines = [
             ReportDataEventInline,
         ]
-    list_display = ['report_creator', 'role', 'created', 'report_event', 'group', 'count']
+    list_display = ['report_creator', 'role', '_day', 'report_event', 'group', 'count']
     date_hierarchy = 'report_event__day'
 
-    def _role(self, obj):
-        print(obj.report_creator.role)
-        return 'lll'
+    def _day(self, obj):
+        return obj.report_event.day.__str__()
+    _day.short_description = 'Дата'
 
     def count(self, obj):
         all_users = ReportDataEvent.objects.filter(report_data_user_data=obj).count()
         present_users = ReportDataEvent.objects.filter(report_data_user_data=obj, report_presence=True).count()
 
         return f'{present_users}/{all_users}'
+    count.short_description = 'НБ/ПР'
 
     def group(self, obj):
         group = None
-        if obj.report_creator.role == 'student':
-            m_g = MemberGroup.objects.filter(member_user=obj.report_creator).first()
-            if m_g:
-                group = m_g.member_group.name
-        if obj.report_creator.role == 'curator':
-            a_g = AcademicGroup.objects.filter(curator=obj.report_creator).first()
-            group = a_g.name
-        return group
+        return obj.report_event.academic_group.name
+        # if obj.report_creator.role == 'student':
+        #     m_g = MemberGroup.objects.filter(member_user=obj.report_creator).first()
+        #     if m_g:
+        #         group = m_g.member_group.name
+        # if obj.report_creator.role == 'curator':
+        #     a_g = AcademicGroup.objects.filter(curator=obj.report_creator).first()
+        #     group = a_g.name
+        # return group
+    group.short_description = 'Група'
 
     def role(self, obj):
         return obj.report_creator.role
+    role.short_description = 'Роль'
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
