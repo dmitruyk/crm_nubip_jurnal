@@ -44,9 +44,35 @@ class LectureAdmin(admin.ModelAdmin):
     pass
 
 
+# def make_assign_to_user_action(user):
+#     def assign_to_user(modeladmin, request, queryset):
+#         for order in queryset:
+#             order.assign_to(user)  # Method on Order model
+#             messages.info(request, "Order {0} assigned to {1}".format(order.id,
+#                                                                       user.first_name))
+#
+#     assign_to_user.short_description = "Assign to {0}".format(user.first_name)
+#     # We need a different '__name__' for each action - Django
+#     # uses this as a key in the drop-down box.
+#     assign_to_user.__name__ = 'assign_to_user_{0}'.format(user.id)
+#
+#     return assign_to_user
+
+from django.contrib.auth import get_user_model
+
 @admin.register(LectureName)
 class LectureNameAdmin(admin.ModelAdmin):
     pass
+    # def get_actions(self, request):
+    #     actions = super(LectureNameAdmin, self).get_actions(request)
+    #
+    #     for user in get_user_model().objects.filter(is_staff=True).order_by('first_name'):
+    #         action = make_assign_to_user_action(user)
+    #         actions[action.__name__] = (action,
+    #                                     action.__name__,
+    #                                     action.short_description)
+    #
+    #     return actions
 
 
 # @admin.register(UserEvent)
@@ -112,6 +138,13 @@ class AcademicGroupAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(department__head=request.user)
+            queryset = queryset.annotate(
+                students_count=Count('membergroup'),
+            )
+            return queryset
+
         queryset = queryset.annotate(
             students_count=Count('membergroup'),
         )
@@ -123,6 +156,7 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
+    list_filter = ('role',)
     list_display = ('name', 'is_staff', 'is_active', 'role')
     fieldsets = (
         (None, {'fields': ('username', 'first_name', 'last_name', 'password', 'role', 'user_permissions', 'groups')}),
@@ -188,6 +222,8 @@ class EventListFilter(admin.SimpleListFilter):
             return queryset.filter(report_event__academic_group=self.value())
         else:
             return queryset
+
+
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(admin.ModelAdmin):
     #search_fields = ('member__name', 'group')

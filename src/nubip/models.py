@@ -118,7 +118,7 @@ class AcademicGroup(CoreModel):
 
     name = models.CharField(null=False,
                             blank=False,
-                            max_length=25,
+                            max_length=500,
                             default=None,
                             verbose_name='Шифр групи')
 
@@ -162,7 +162,7 @@ class LectureName(CoreModel):
 
     name = models.CharField(null=True,
                             blank=True,
-                            max_length=25,
+                            max_length=500,
                             default=None,
                             verbose_name='Назва предмету')
 
@@ -188,7 +188,7 @@ class Lecture(CoreModel):
 
     name = models.CharField(null=True,
                             blank=True,
-                            max_length=25,
+                            max_length=500,
                             default=None,
                             verbose_name='Номер по порядку')
 
@@ -432,7 +432,6 @@ class UserEvent(CoreModel):
         UserEvent.objects.filter(pk=self.id).update(presence=False,
                                                     reason=None,
                                                     additional_info=None)
-
 
 
 class ReportUserEvent(CoreModel):
