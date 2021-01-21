@@ -313,31 +313,23 @@ class Event(models.Model):
         #                     event.start_time) + '-' + str(event.end_time))
 
     def save(self, *args, **kwargs):
-
-        # if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
-        #     raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
+        if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
+            raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
         super().save(*args, **kwargs)
-        UserEvent.objects.filter(event=self).delete()
-        students = MemberGroup.objects.filter(member_group=self.academic_group)
-        for student in students:
-            user = UserProfile.objects.filter(user__id=student.member_user.id).first()
-            if user:
-                g, _ = UserEvent.objects.update_or_create(event=self, user=user)
+        if self.academic_group and self.user.is_superuser:
+            UserEvent.objects.filter(event=self).delete()
+            students = MemberGroup.objects.filter(member_group=self.academic_group)
+            for student in students:
+                user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                if user:
 
+                    g, _ = UserEvent.objects.update_or_create(event=self, user=user)
 
-        # if self.academic_group and self.user.is_superuser:
-        #     UserEvent.objects.filter(event=self).delete()
-        #     students = MemberGroup.objects.filter(member_group=self.academic_group)
-        #     for student in students:
-        #         user = UserProfile.objects.filter(user__id=student.member_user.id).first()
-        #         if user:
-        #             g, _ = UserEvent.objects.update_or_create(event=self, user=user)
-        #
-        # else:
-        #     user_events = UserEvent.objects.filter(event=self)
-        #     new_event_report = ReportUserEvent.objects.create(report_event=self,
-        #                                                       report_creator=self.user,
-        #                                                       )
+        else:
+            user_events = UserEvent.objects.filter(event=self)
+            new_event_report = ReportUserEvent.objects.create(report_event=self,
+                                                              report_creator=self.user,
+                                                              )
             #print(user_events)
             # for event in user_events:
             #     ReportDataEvent.objects.create(
