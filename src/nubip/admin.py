@@ -115,8 +115,13 @@ class UserProfileInline(admin.TabularInline):
 class UserEventInline(admin.TabularInline):
     model = UserEvent
     extra = 0
-    readonly_fields = ('user',)
     ordering = ['-created']
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return ('user',)
+        else:
+            return super(UserEventInline, self).get_readonly_fields(request, obj)
 
 
 class ReportDataEventInline(admin.TabularInline):
@@ -294,6 +299,7 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ('academic_group', )
     #readonly_fields = ('lecture', 'academic_group', 'index_number', 'day', 'notes')
     date_hierarchy = 'day'
+    ordering = ('day',)
     inlines = [
             UserEventInline,
             # ChargeBoxActionInline,
