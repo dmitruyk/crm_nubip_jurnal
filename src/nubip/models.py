@@ -241,7 +241,7 @@ class Event(models.Model):
                                      verbose_name='Заняття за розкладом')
 
 
-    day = models.DateField(u'Дата проведення', help_text=u'Рік місяць число')
+    day = models.DateField(u'Дата проведення', help_text=u'Місяць число рік')
     #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     #end_time = models.TimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
@@ -317,11 +317,17 @@ class Event(models.Model):
             raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
         super().save(*args, **kwargs)
         if self.academic_group and self.user.is_superuser:
+            print('yyyy')
             UserEvent.objects.filter(event=self).delete()
             students = MemberGroup.objects.filter(member_group=self.academic_group)
+            print(students)
             for student in students:
-                user = UserProfile.objects.filter(user=student.member_user).first()
+                user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                print(student.member_user.id)
+                print(student.member_user)
+                print(UserProfile.objects.filter(user__id=student.member_user.id).first())
                 if user:
+                    print('tttttt')
                     g, _ = UserEvent.objects.update_or_create(event=self, user=user)
 
         else:
@@ -507,3 +513,90 @@ class AbstractModel(Event):
     def __str__(self):
         return f'{self.name}'
 
+
+class GroupEventCreation(CoreModel):
+    class Meta:
+        abstract = True
+    # lecture = models.ForeignKey(LectureName,
+    #                             null=True,
+    #                             blank=True,
+    #                             default=None,
+    #                             on_delete=models.DO_NOTHING,
+    #                             verbose_name='Назва предмету')
+
+    academic_group = models.ForeignKey(AcademicGroup,
+                                       null=True,
+                                       blank=True,
+                                       default=None,
+                                       on_delete=models.DO_NOTHING,
+                                       verbose_name='Академічна група')
+
+    # index_number = models.ForeignKey(Lecture,
+    #                                  null=True,
+    #                                  blank=True,
+    #                                  default=None,
+    #                                  on_delete=models.DO_NOTHING,
+    #                                  verbose_name='Заняття за розкладом')
+
+
+    day = models.DateField(u'Дата проведення', help_text=u'Рік місяць число')
+    #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
+    #end_time = models.TimeField(u'Final time', help_text=u'Final time')
+    #notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
+
+class FGroupEventCreation(CoreModel):
+    class Meta:
+        abstract = True
+    lecture = models.ForeignKey(LectureName,
+                                null=True,
+                                blank=True,
+                                default=None,
+                                on_delete=models.DO_NOTHING,
+                                verbose_name='Назва предмету')
+
+    # academic_group = models.ForeignKey(AcademicGroup,
+    #                                    null=True,
+    #                                    blank=True,
+    #                                    default=None,
+    #                                    on_delete=models.DO_NOTHING,
+    #                                    verbose_name='Академічна група')
+
+    index_number = models.ForeignKey(Lecture,
+                                     null=True,
+                                     blank=True,
+                                     default=None,
+                                     on_delete=models.DO_NOTHING,
+                                     verbose_name='Заняття за розкладом')
+
+
+    #day = models.DateField(u'Дата проведення', help_text=u'Рік місяць число')
+    #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
+    #end_time = models.TimeField(u'Final time', help_text=u'Final time')
+    # notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
+
+
+class GEV(GroupEventCreation):
+    pass
+    # gev_event =  models.ForeignKey(Event,
+    #                                 related_name='report_user_gev',
+    #                                 null=True,
+    #                                 blank=True,
+    #                                 default=None,
+    #                                 on_delete=models.DO_NOTHING)
+
+
+
+    def answer(self):
+        return self.user
+
+    def __str__(self):
+        return 'self.gev_event'
+
+
+class FGEV(FGroupEventCreation):
+    gev_event =  models.ForeignKey(GEV,
+                                    related_name='report_user_gev',
+                                    null=True,
+                                    blank=True,
+                                    default=None,
+                                    on_delete=models.DO_NOTHING)

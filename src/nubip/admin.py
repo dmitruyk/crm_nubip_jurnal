@@ -62,7 +62,15 @@ from django.contrib.auth import get_user_model
 
 @admin.register(LectureName)
 class LectureNameAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['lecture_name', 'lector']
+    search_fields = ('name', 'teacher__first_name')
+
+    def lecture_name(self, obj):
+        return obj.name
+
+    def lector(self, obj):
+        return obj.teacher
+
     # def get_actions(self, request):
     #     actions = super(LectureNameAdmin, self).get_actions(request)
     #
@@ -85,6 +93,12 @@ class DepartmentAdmin(admin.ModelAdmin):
     list_display = ['name', 'head']
 
 
+class LectureNameInline(admin.TabularInline):
+    model = LectureName
+    extra = 0
+    ordering = ['-name']
+
+
 class MemberGroupInline(admin.TabularInline):
     model = MemberGroup
     extra = 0
@@ -101,6 +115,7 @@ class UserProfileInline(admin.TabularInline):
 class UserEventInline(admin.TabularInline):
     model = UserEvent
     extra = 0
+    readonly_fields = ('user',)
     ordering = ['-created']
 
 
@@ -275,13 +290,21 @@ class ReportUserEventAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     form = MyCustomForm
-    list_display = ['lecture', 'index_number', 'day', 'custom_column']
+    list_display = ['lecture', 'academic_group', 'index_number', 'day', 'custom_column']
+    list_filter = ('academic_group', )
+    #readonly_fields = ('lecture', 'academic_group', 'index_number', 'day', 'notes')
     date_hierarchy = 'day'
     inlines = [
             UserEventInline,
             # ChargeBoxActionInline,
             # ChargePointActionInline
         ]
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return ('lecture', 'academic_group', 'index_number', 'day', 'custom_column', 'notes')
+        else:
+            return super(EventAdmin, self).get_readonly_fields(request, obj)
     #readonly_fields = ('students',)
     #form = Event(request.user, request.POST)
     # fieldsets = [
@@ -385,6 +408,35 @@ class EventAdmin(admin.ModelAdmin):
         return queryset
 
 
+class FGEVInline(admin.TabularInline):
+    model = FGEV
+    extra = 0
+    #ordering = ['-gev_event__gev_event__lecture__name']
+
+
+# @admin.register(GEV)
+# class GEVAdmin(admin.ModelAdmin):
+#     inlines = [
+#             FGEVInline,
+#             # ChargeBoxActionInline,
+#             # ChargePointActionInline
+#         ]
+#
+#     def get_inline_instances(self, request, obj=None):
+#         print(self.inlines, obj)
+#         print([inline(self.model, self.admin_site) for inline in self.inlines])
+#         return [inline(self.model, self.admin_site) for inline in self.inlines]
+#     # list_display = ('Answer.question.question_text', 'Answer.User.user_id', 'Choice.choice_text')
+#     readony_fields = ('lecture', 'day')
+#     inlines = [
+#         LectureNameInline,
+#     ]
+#     list_display = ('lecture', 'day', 'academic_group')
+#     fieldsets = [
+#         ('Question', {'fields': ['lecture']}),
+#         ('User', {'fields': ['day']}),
+#         ('Vote', {'fields': ['academic_group']}),
+#     ]
     #change_list_template = 'admin/events/change_list.html'
     # def changelist_view(self, request, extra_context=None):
     #     after_day = request.GET.get('day__gte', None)
@@ -461,3 +513,27 @@ class EventAdmin(admin.ModelAdmin):
 #     ]
 #     # search_fields = ('phone_number', 'email', 'first_name', 'last_name')
 #     # list_filter = ('country', 'organization', 'is_active')
+
+# from django.http import HttpResponse
+# from django.urls import path
+#
+# # my dummy model
+# class DummyModel(models.Model):
+#
+#     class Meta:
+#         verbose_name_plural = 'Dummy Model'
+#         app_label = 'nubip'
+#
+# def my_custom_view(request):
+#     return HttpResponse('Admin Custom View')
+#
+# class DummyModelAdmin(admin.ModelAdmin):
+#     model = DummyModel
+#
+#     def get_urls(self):
+#         view_name = '{}_{}_changelist'.format(
+#             self.model._meta.app_label, self.model._meta.model_name)
+#         return [
+#             path('my_admin_path/', my_custom_view, name=view_name),
+#         ]
+# admin.site.register(DummyModel, DummyModelAdmin)

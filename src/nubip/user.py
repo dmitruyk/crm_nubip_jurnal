@@ -107,3 +107,6 @@ class User(CoreModel, models.AbstractUser):
                 my_group.user_set.add(self)
             except:
                 raise Exception(f'Group for role {self.role} not found!')
+        from .models import UserProfile
+        if not UserProfile.objects.filter(user=self).exists():
+            UserProfile.objects.create(user=self)
