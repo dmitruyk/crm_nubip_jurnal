@@ -265,8 +265,8 @@ class ReportUserEventAdmin(admin.ModelAdmin):
         all_users = ReportDataEvent.objects.filter(report_data_user_data=obj).count()
         present_users = ReportDataEvent.objects.filter(report_data_user_data=obj, report_presence=True).count()
 
-        return f'{present_users}/{all_users}'
-    count.short_description = 'НБ/ПР'
+        return f'{all_users-present_users}/{present_users}/{all_users}'
+    count.short_description = 'НБ/ПР/ВСЬОГО'
 
     def group(self, obj):
         group = None
