@@ -13,9 +13,12 @@ from django.shortcuts import redirect
 from django.core.exceptions import ValidationError
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.admin import DateFieldListFilter
 from .forms import CustomUserCreationForm, CustomUserChangeForm, MyCustomForm
 from django.db.models import Count
 from django.db.models.query import Q
+
+from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 from .models import *
 
@@ -36,7 +39,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ReportDataEvent)
 class ReportDataEventAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['report_user', 'report_presence']
 
 
 @admin.register(Lecture)
@@ -247,7 +250,7 @@ class EventListFilter(admin.SimpleListFilter):
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
-    list_filter = ('report_event__lecture', EventListFilter,)
+    list_filter = (('report_event__day', DateRangeFilter), 'report_event__lecture', EventListFilter, ('report_event__day', DateFieldListFilter),)
     inlines = [
             ReportDataEventInline,
         ]
@@ -299,7 +302,7 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ('academic_group', )
     #readonly_fields = ('lecture', 'academic_group', 'index_number', 'day', 'notes')
     date_hierarchy = 'day'
-    ordering = ('day',)
+    ordering = ('day', 'index_number')
     inlines = [
             UserEventInline,
             # ChargeBoxActionInline,
@@ -323,6 +326,20 @@ class EventAdmin(admin.ModelAdmin):
         from django.utils.html import format_html
         request = getattr(self, 'request', None)
         if request:
+            if request.user.is_superuser:
+                if ReportUserEvent.objects.filter(report_event=obj).exists():
+                    return format_html(
+                        '<span style="color: #{};">{}</span>',
+                        '6be073',
+                        'Подано',
+                    )
+                else:
+                    return format_html(
+                        '<span style="color: #{};">{}</span>',
+                        'ff5733',
+                        'НЕ Подано',
+                    )
+
             if ReportUserEvent.objects.filter(report_event=obj, report_creator=request.user).exists():
                 return format_html(
                     '<span style="color: #{};">{}</span>',
@@ -335,6 +352,12 @@ class EventAdmin(admin.ModelAdmin):
                     'ff5733',
                     'НЕ Подано',
                 )
+        else:
+            return format_html(
+                '<span style="color: #{};">{}</span>',
+                'ff5733',
+                'Невідомо',
+            )
 
         #00ff13
         # retval = ('green.jpg', 'This location checked in less than 5 minutes ago')

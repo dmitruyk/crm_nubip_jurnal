@@ -331,16 +331,26 @@ class Event(models.Model):
                                                               report_creator=self.user,
                                                               )
             #print(user_events)
-            # for event in user_events:
-            #     ReportDataEvent.objects.create(
-            #         report_data_user_data=new_event_report,
-            #         report_user=event.user.user,
-            #         )
-                # profile = UserProfile.objects.filter(user=event.user.user).first()
-                #
-                # UserEvent.objects.filter(event=self).update(presence=False,
-                #                                                           reason=None,
-                #                                                           additional_info=None)
+            print(user_events.count())
+            for event in user_events:
+                print('qqqqqq')
+                ReportDataEvent.objects.create(
+                    report_data_user_data=new_event_report,
+                    report_user=event.user.user,
+                    )
+
+                # ReportDataEvent.objects.create(
+                #     report_data_user_data=new_event_report,
+                #     report_user=event.user.user,
+                #     #report_presence=event.presence,
+                #     #report_reason=event.reason,
+                #     report_additional_info=event.additional_info
+                #     )
+                profile = UserProfile.objects.filter(user=event.user.user).first()
+
+                UserEvent.objects.filter(event=self).update(presence=False,
+                                                                          reason=None,
+                                                                          additional_info=None)
 
 
 class UserProfile(CoreModel):
@@ -419,17 +429,23 @@ class UserEvent(CoreModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
-        if not ReportDataEvent.objects.filter(
-            report_data_user_data=report_event,
-            report_user=self.user.user
-        ).exists():
-            ReportDataEvent.objects.create(
-                report_data_user_data=report_event,
-                report_user=self.user.user,
-                report_presence=self.presence,
-                report_reason=self.reason,
-                report_additional_info=self.additional_info
-            )
+        ReportDataEvent.objects.filter(report_data_user_data=report_event,
+                                       report_user=self.user.user).update(
+                                        report_presence=self.presence,
+                                        report_reason=self.reason,
+                                        report_additional_info=self.additional_info
+        )
+        # if not ReportDataEvent.objects.filter(
+        #     report_data_user_data=report_event,
+        #     report_user=self.user.user
+        # ).exists():
+        #     ReportDataEvent.objects.create(
+        #         report_data_user_data=report_event,
+        #         report_user=self.user.user,
+        #         report_presence=self.presence,
+        #         report_reason=self.reason,
+        #         report_additional_info=self.additional_info
+        #     )
         UserEvent.objects.filter(pk=self.id).update(presence=False,
                                                     reason=None,
                                                     additional_info=None)
