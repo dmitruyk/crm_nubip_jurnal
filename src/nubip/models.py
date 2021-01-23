@@ -426,6 +426,21 @@ class UserEvent(CoreModel):
     def __str__(self):
         return f'{self.user} -> {self.event.lecture.name}'
 
+    def is_not_presence(self):
+        if not self.presence and not self.reason:
+            return True
+
+    def is_important(self):
+        if not self.presence and self.reason == 'important' and not self.additional_info:
+            return True
+
+    def clean(self):
+        if self.is_not_presence():
+            raise ValidationError(f'Вкажіть причину вітсутності для {self.user}!')
+
+        if self.is_important():
+            raise ValidationError(f'Додайте додаткову інформацію про причину вітсутності для {self.user}!')
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
