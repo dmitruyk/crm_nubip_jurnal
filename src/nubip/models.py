@@ -426,6 +426,10 @@ class UserEvent(CoreModel):
     def __str__(self):
         return f'{self.user} -> {self.event.lecture.name}'
 
+    def is_presence(self):
+        if self.presence and self.reason:
+            return True
+
     def is_not_presence(self):
         if not self.presence and not self.reason:
             return True
@@ -435,8 +439,11 @@ class UserEvent(CoreModel):
             return True
 
     def clean(self):
+        if self.is_presence():
+            raise ValidationError(f'Виберіть, будь ласка, один статус для {self.user}!')
+
         if self.is_not_presence():
-            raise ValidationError(f'Вкажіть причину вітсутності для {self.user}!')
+            raise ValidationError(f'Вкажіть, будь ласка, причину вітсутності для {self.user}!')
 
         if self.is_important():
             raise ValidationError(f'Додайте додаткову інформацію про причину вітсутності для {self.user}!')
