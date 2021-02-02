@@ -158,13 +158,24 @@ class LectureName(CoreModel):
 
     class Meta:
         verbose_name_plural = "Перелік дисциплін"
-        unique_together = ('name', 'teacher',)
 
     name = models.CharField(null=True,
                             blank=True,
                             max_length=500,
                             default=None,
                             verbose_name='Назва предмету')
+
+    def clean(self):
+        if self.teacher.role not in ['teacher', 'curator', 'head_department']:
+            raise ValidationError('Викладачем може бути тількт користувач з роллю Викладач, Куратор або Завідувач!')
+
+    def __str__(self):
+        return f'{self.name}'
+
+
+class TutorName(CoreModel):
+    class Meta:
+        verbose_name_plural = "Викладач"
 
     teacher = models.ForeignKey(User,
                                 null=True,
@@ -173,12 +184,12 @@ class LectureName(CoreModel):
                                 on_delete=models.DO_NOTHING,
                                 verbose_name='Викладач')
 
-    def clean(self):
-        if self.teacher.role not in ['teacher', 'curator', 'head_department']:
-            raise ValidationError('Викладачем може бути тількт користувач з роллю Викладач, Куратор або Завідувач!')
-
-    def __str__(self):
-        return f'Предмет: {self.name}. Викладач: {self.teacher}'
+    lecture = models.ForeignKey(LectureName,
+                                null=True,
+                                blank=True,
+                                default=None,
+                                on_delete=models.DO_NOTHING,
+                                verbose_name='Дисципліна')
 
 
 class Lecture(CoreModel):
@@ -438,6 +449,10 @@ class UserEvent(CoreModel):
         if not self.presence and self.reason == 'important' and not self.additional_info:
             return True
 
+    def is_other(self):
+        if not self.presence and self.reason == 'other' and not self.additional_info:
+            return True
+
     def clean(self):
         if self.is_presence():
             raise ValidationError(f'Виберіть, будь ласка, один статус для {self.user}!')
@@ -446,6 +461,9 @@ class UserEvent(CoreModel):
             raise ValidationError(f'Вкажіть, будь ласка, причину вітсутності для {self.user}!')
 
         if self.is_important():
+            raise ValidationError(f'Додайте додаткову інформацію про поважну причину для {self.user}!')
+
+        if self.is_other():
             raise ValidationError(f'Додайте додаткову інформацію про причину вітсутності для {self.user}!')
 
     def save(self, *args, **kwargs):
@@ -506,8 +524,8 @@ class ReportDataEvent(CoreModel):
     TYPES = (
         ('sickness', 'Хворіє'),
         ('important', 'Поважна'),
-        ('home', 'Home'),
-        ('other', 'Other')
+        ('home', 'Сімейні обставини'),
+        ('other', 'Інше')
         )
 
     report_data_user_data = models.ForeignKey(ReportUserEvent,
@@ -537,6 +555,9 @@ class ReportDataEvent(CoreModel):
                                               max_length=200,
                                               blank=True,
                                               verbose_name='Додаткова інформація')
+
+    # def __str__(self):
+    #     return self.report_data_user_data
 
 
 class AbstractModel(Event):

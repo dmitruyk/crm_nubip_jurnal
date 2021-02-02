@@ -19,6 +19,7 @@ from django.db.models import Count
 from django.db.models.query import Q
 
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
+from import_export.admin import ExportActionMixin
 
 from .models import *
 
@@ -63,16 +64,6 @@ class LectureAdmin(admin.ModelAdmin):
 
 from django.contrib.auth import get_user_model
 
-@admin.register(LectureName)
-class LectureNameAdmin(admin.ModelAdmin):
-    list_display = ['lecture_name', 'lector']
-    search_fields = ('name', 'teacher__first_name')
-
-    def lecture_name(self, obj):
-        return obj.name
-
-    def lector(self, obj):
-        return obj.teacher
 
     # def get_actions(self, request):
     #     actions = super(LectureNameAdmin, self).get_actions(request)
@@ -102,6 +93,12 @@ class LectureNameInline(admin.TabularInline):
     ordering = ['-name']
 
 
+class TutorNameInline(admin.TabularInline):
+    model = TutorName
+    extra = 0
+    ordering = ['-teacher']
+
+
 class MemberGroupInline(admin.TabularInline):
     model = MemberGroup
     extra = 0
@@ -125,6 +122,21 @@ class UserEventInline(admin.TabularInline):
             return ('user',)
         else:
             return super(UserEventInline, self).get_readonly_fields(request, obj)
+
+
+@admin.register(LectureName)
+class LectureNameAdmin(admin.ModelAdmin):
+    list_display = ['lecture_name']
+    search_fields = ('name',)
+    inlines = [
+            TutorNameInline,
+        ]
+
+    def lecture_name(self, obj):
+        return obj.name
+
+    def lector(self, obj):
+        return obj.teacher
 
 
 class ReportDataEventInline(admin.TabularInline):
@@ -152,7 +164,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
             m_g = MemberGroup.objects.filter(member_user__last_name__icontains=search_term)
             if m_g:
                 queryset |= self.model.objects.filter(pk__in=[m.member_group.id for m in m_g])
-        except Exception as e :
+        except Exception as e:
             raise Exception(e)
         return queryset, use_distinct
 
@@ -166,12 +178,26 @@ class AcademicGroupAdmin(admin.ModelAdmin):
             queryset = queryset.annotate(
                 students_count=Count('membergroup'),
             )
+            print('ttttt', queryset)
             return queryset
 
         queryset = queryset.annotate(
             students_count=Count('membergroup'),
         )
         return queryset
+
+    # def queryset(self, request, queryset):
+    #     """
+    #     Returns the filtered queryset based on the value
+    #     provided in the query string and retrievable via
+    #     `self.value()`.
+    #     """
+    #     # Compare the requested value
+    #     if not request.user.is_superuser:
+    #         department = Department.objects.filter(head=request.user).first()
+    #         return queryset.filter(department=department)
+    #     else:
+    #         return queryset
 
 
 @admin.register(User)
@@ -246,16 +272,28 @@ class EventListFilter(admin.SimpleListFilter):
         else:
             return queryset
 
-
+from tabular_export.admin import export_to_csv_action, export_to_excel_action, export_to_excel_response
 @admin.register(ReportUserEvent)
-class ReportUserEventAdmin(admin.ModelAdmin):
+class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
+    actions = (export_to_excel_action, export_to_csv_action, 'export_batch_summary_action',)
     list_filter = (('report_event__day', DateRangeFilter), 'report_event__lecture', EventListFilter, ('report_event__day', DateFieldListFilter),)
     inlines = [
             ReportDataEventInline,
         ]
     list_display = ['report_creator', 'role', '_day', 'report_event', 'group', 'count']
     date_hierarchy = 'report_event__day'
+    import_id_fields = ('report_event__lecture',)
+    fields = ('report_event__lecture', 'role', 'report_event', 'count',)
+
+    actions = ('export_batch_summary_action', )
+
+    def export_batch_summary_action(self, request, queryset):
+        headers = ['Batch Name', 'My Computed Field']
+        rows = queryset.annotate("…").values_list('title', 'computed_field_name')
+        return export_to_excel_response('batch-summary.xlsx', headers, rows)
+    export_batch_summary_action.short_description = 'Export Batch Summary'
+
 
     def _day(self, obj):
         return obj.report_event.day.__str__()
@@ -424,7 +462,9 @@ class EventAdmin(admin.ModelAdmin):
             if member:
                 queryset = queryset.filter(academic_group=member.member_group)
         elif request.user.role in ['teacher', 'curator']:
-            queryset = queryset.filter(Q(lecture__teacher=request.user) | Q(academic_group__curator=request.user))
+            tutor_lectures = TutorName.objects.filter(teacher=request.user).all()
+            lectures = [lec.lecture for lec in tutor_lectures]
+            queryset = queryset.filter(Q(lecture__in=lectures) | Q(academic_group__curator=request.user))
         else:
             return queryset.none()
         #     queryset = []
