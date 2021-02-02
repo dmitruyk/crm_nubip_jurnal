@@ -10,6 +10,8 @@ from django.db import models, transaction
 from .user import User
 
 from django.core.exceptions import ValidationError
+
+from django.http import HttpResponse
 from django.urls import reverse
 
 
@@ -147,7 +149,7 @@ class AcademicGroup(CoreModel):
 
     def clean(self):
         if self.curator:
-            if self.curator.role not in ['teacher', 'curator']:
+            if self.curator.role not in ['teacher', 'curator', 'head_department']:
                 raise ValidationError('Куратором може бути тількт користувач з роллю Куратор або Викладач!')
 
     def __str__(self):
@@ -288,36 +290,10 @@ class Event(models.Model):
 
         return overlap
 
-    # def get_absolute_url(self):
-    #     url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
-    #     return u'<a href="%s">%s</a>' % (url, str(self.start_time.strftime("%H:%M"))+'-'+str(self.end_time.strftime("%H:%M"))+' '+str(self.name)+' '+str(self.academic_group))
-
-    # def clean(self):
-    #     if self.end_time <= self.start_time:
-    #         raise ValidationError('Ending times must after starting times')
-
-        from django.http import HttpResponse
         if hasattr(self, 'user'):
             if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user).exists():
                 html = f'<html><body>Report for {self.lecture}, created by {self.user} already exists!</body></html>'
-                #print('ppp')
                 return HttpResponse(html)
-                #raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
-
-        # if ReportUserEvent.objects.filter(report_event=self).exists():
-        #     print(self.user)
-        #     raise ValidationError(f'Report for {self.name}, created by {self.user} already exists! ')
-        # print('2222')
-
-
-
-        # events = Event.objects.filter(day=self.day, academic_group=self.academic_group)
-        # if events.exists():
-        #     for event in events:
-        #         if self.check_overlap(event.start_time, event.end_time, self.start_time, self.end_time):
-        #             raise ValidationError(
-        #                 'There is an overlap with another event: ' + str(event.day) + ', ' + str(
-        #                     event.start_time) + '-' + str(event.end_time))
 
     def save(self, *args, **kwargs):
         if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
@@ -337,27 +313,16 @@ class Event(models.Model):
             new_event_report = ReportUserEvent.objects.create(report_event=self,
                                                               report_creator=self.user,
                                                               )
-            #print(user_events)
-            print(user_events.count())
+
             for event in user_events:
-                print('qqqqqq')
                 ReportDataEvent.objects.create(
                     report_data_user_data=new_event_report,
                     report_user=event.user.user,
                     )
 
-                # ReportDataEvent.objects.create(
-                #     report_data_user_data=new_event_report,
-                #     report_user=event.user.user,
-                #     #report_presence=event.presence,
-                #     #report_reason=event.reason,
-                #     report_additional_info=event.additional_info
-                #     )
-                profile = UserProfile.objects.filter(user=event.user.user).first()
-
-                UserEvent.objects.filter(event=self).update(presence=False,
-                                                                          reason=None,
-                                                                          additional_info=None)
+            UserEvent.objects.filter(event=self).update(presence=False,
+                                                                      reason=None,
+                                                                      additional_info=None)
 
 
 class UserProfile(CoreModel):
@@ -471,17 +436,6 @@ class UserEvent(CoreModel):
                                         report_reason=self.reason,
                                         report_additional_info=self.additional_info
         )
-        # if not ReportDataEvent.objects.filter(
-        #     report_data_user_data=report_event,
-        #     report_user=self.user.user
-        # ).exists():
-        #     ReportDataEvent.objects.create(
-        #         report_data_user_data=report_event,
-        #         report_user=self.user.user,
-        #         report_presence=self.presence,
-        #         report_reason=self.reason,
-        #         report_additional_info=self.additional_info
-        #     )
         UserEvent.objects.filter(pk=self.id).update(presence=False,
                                                     reason=None,
                                                     additional_info=None)
@@ -552,9 +506,6 @@ class ReportDataEvent(CoreModel):
                                               blank=True,
                                               verbose_name='Додаткова інформація')
 
-    # def __str__(self):
-    #     return self.report_data_user_data
-
 
 class AbstractModel(Event):
     class Meta:
@@ -567,12 +518,6 @@ class AbstractModel(Event):
 class GroupEventCreation(CoreModel):
     class Meta:
         abstract = True
-    # lecture = models.ForeignKey(LectureName,
-    #                             null=True,
-    #                             blank=True,
-    #                             default=None,
-    #                             on_delete=models.DO_NOTHING,
-    #                             verbose_name='Назва предмету')
 
     academic_group = models.ForeignKey(AcademicGroup,
                                        null=True,
@@ -581,18 +526,8 @@ class GroupEventCreation(CoreModel):
                                        on_delete=models.DO_NOTHING,
                                        verbose_name='Академічна група')
 
-    # index_number = models.ForeignKey(Lecture,
-    #                                  null=True,
-    #                                  blank=True,
-    #                                  default=None,
-    #                                  on_delete=models.DO_NOTHING,
-    #                                  verbose_name='Заняття за розкладом')
-
-
     day = models.DateField(u'Дата проведення', help_text=u'Рік місяць число')
-    #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
-    #end_time = models.TimeField(u'Final time', help_text=u'Final time')
-    #notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
+
 
 class FGroupEventCreation(CoreModel):
     class Meta:
@@ -604,25 +539,12 @@ class FGroupEventCreation(CoreModel):
                                 on_delete=models.DO_NOTHING,
                                 verbose_name='Назва предмету')
 
-    # academic_group = models.ForeignKey(AcademicGroup,
-    #                                    null=True,
-    #                                    blank=True,
-    #                                    default=None,
-    #                                    on_delete=models.DO_NOTHING,
-    #                                    verbose_name='Академічна група')
-
     index_number = models.ForeignKey(Lecture,
                                      null=True,
                                      blank=True,
                                      default=None,
                                      on_delete=models.DO_NOTHING,
                                      verbose_name='Заняття за розкладом')
-
-
-    #day = models.DateField(u'Дата проведення', help_text=u'Рік місяць число')
-    #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
-    #end_time = models.TimeField(u'Final time', help_text=u'Final time')
-    # notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
 
 
 class GEV(GroupEventCreation):
