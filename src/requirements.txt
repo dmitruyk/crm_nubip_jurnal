@@ -8,3 +8,4 @@ djangorestframework==3.12.2
 redis==3.5.3
 celery==5.0.5
 django-admin-rangefilter==0.6.4
+django-tabular-export==1.1.0
