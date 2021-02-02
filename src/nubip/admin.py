@@ -277,18 +277,18 @@ from tabular_export.admin import export_to_csv_action, export_to_excel_action, e
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
-    actions = (export_to_excel_action, export_to_csv_action, 'export_batch_summary_action',)
+    actions = (export_to_excel_action, export_to_csv_action, 'export_batch_summary_action')
     list_filter = (('report_event__day', DateRangeFilter), 'report_event__lecture', EventListFilter, ('report_event__day', DateFieldListFilter),)
     inlines = [
             ReportDataEventInline,
         ]
     list_display = ['report_creator', 'role', '_day', 'report_event', 'group', 'count']
     date_hierarchy = 'report_event__day'
-    import_id_fields = ('report_event__lecture',)
-    fields = ('report_event__lecture', 'role', 'report_event', 'count',)
+    #import_id_fields = ('report_event__lecture',)
+    #fields = ('report_event__lecture', 'role', 'report_event', 'count',)
 
-    actions = ('export_batch_summary_action', )
-
+    #actions = ('export_batch_summary_action', )
+    #'export_batch_summary_action',
     def export_batch_summary_action(self, request, queryset):
         headers = ['Batch Name', 'My Computed Field']
         rows = queryset.annotate("…").values_list('title', 'computed_field_name')
