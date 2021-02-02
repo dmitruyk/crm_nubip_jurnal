@@ -165,10 +165,6 @@ class LectureName(CoreModel):
                             default=None,
                             verbose_name='Назва предмету')
 
-    def clean(self):
-        if self.teacher.role not in ['teacher', 'curator', 'head_department']:
-            raise ValidationError('Викладачем може бути тількт користувач з роллю Викладач, Куратор або Завідувач!')
-
     def __str__(self):
         return f'{self.name}'
 

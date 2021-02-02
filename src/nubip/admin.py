@@ -95,6 +95,7 @@ class LectureNameInline(admin.TabularInline):
 
 class TutorNameInline(admin.TabularInline):
     model = TutorName
+    raw_id_fields = ('teacher',)
     extra = 0
     ordering = ['-teacher']
 
