@@ -298,31 +298,32 @@ class Event(models.Model):
     def save(self, *args, **kwargs):
         if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
             raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
-        super().save(*args, **kwargs)
-        if self.academic_group and self.user.is_superuser:
-            UserEvent.objects.filter(event=self).delete()
-            students = MemberGroup.objects.filter(member_group=self.academic_group)
-            for student in students:
-                user = UserProfile.objects.filter(user__id=student.member_user.id).first()
-                if user:
-
-                    g, _ = UserEvent.objects.update_or_create(event=self, user=user)
-
         else:
-            user_events = UserEvent.objects.filter(event=self)
-            new_event_report = ReportUserEvent.objects.create(report_event=self,
-                                                              report_creator=self.user,
-                                                              )
+            super().save(*args, **kwargs)
+            if self.academic_group and self.user.is_superuser:
+                UserEvent.objects.filter(event=self).delete()
+                students = MemberGroup.objects.filter(member_group=self.academic_group)
+                for student in students:
+                    user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                    if user:
 
-            for event in user_events:
-                ReportDataEvent.objects.create(
-                    report_data_user_data=new_event_report,
-                    report_user=event.user.user,
-                    )
+                        g, _ = UserEvent.objects.update_or_create(event=self, user=user)
 
-            UserEvent.objects.filter(event=self).update(presence=False,
-                                                                      reason=None,
-                                                                      additional_info=None)
+            else:
+                user_events = UserEvent.objects.filter(event=self)
+                new_event_report = ReportUserEvent.objects.create(report_event=self,
+                                                                  report_creator=self.user,
+                                                                  )
+
+                for event in user_events:
+                    ReportDataEvent.objects.create(
+                        report_data_user_data=new_event_report,
+                        report_user=event.user.user,
+                        )
+
+                UserEvent.objects.filter(event=self).update(presence=False,
+                                                                          reason=None,
+                                                                          additional_info=None)
 
 
 class UserProfile(CoreModel):
@@ -428,17 +429,26 @@ class UserEvent(CoreModel):
             raise ValidationError(f'Додайте додаткову інформацію про причину вітсутності для {self.user}!')
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
         report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
-        ReportDataEvent.objects.filter(report_data_user_data=report_event,
-                                       report_user=self.user.user).update(
-                                        report_presence=self.presence,
-                                        report_reason=self.reason,
-                                        report_additional_info=self.additional_info
-        )
-        UserEvent.objects.filter(pk=self.id).update(presence=False,
-                                                    reason=None,
-                                                    additional_info=None)
+        print(self.user)
+        if ReportDataEvent.objects.filter(report_data_user_data=report_event,
+                                          report_user=self.user.user,
+                                          protected=True).exists():
+
+            print('eeee')
+        else:
+            print('tttt')
+            super().save(*args, **kwargs)
+            ReportDataEvent.objects.filter(report_data_user_data=report_event,
+                                           report_user=self.user.user).update(
+                                            report_presence=self.presence,
+                                            report_reason=self.reason,
+                                            report_additional_info=self.additional_info,
+                                            protected=True,
+            )
+            UserEvent.objects.filter(pk=self.id).update(presence=False,
+                                                        reason=None,
+                                                        additional_info=None)
 
 
 class ReportUserEvent(CoreModel):
@@ -505,6 +515,8 @@ class ReportDataEvent(CoreModel):
                                               max_length=200,
                                               blank=True,
                                               verbose_name='Додаткова інформація')
+
+    protected = models.BooleanField(default=False)
 
 
 class AbstractModel(Event):

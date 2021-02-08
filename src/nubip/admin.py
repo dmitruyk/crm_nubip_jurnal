@@ -79,7 +79,12 @@ from django.contrib.auth import get_user_model
 
 # @admin.register(UserEvent)
 # class UserEventAdmin(admin.ModelAdmin):
-#     pass
+#     def save_model(self, request, obj, form, change):
+#         try:
+#             obj.user = request.user
+#             super().save_model(request, obj, form, change)
+#         except Exception as e:
+#             self.message_user(request, str(e), level=messages.ERROR)
 
 
 @admin.register(Department)
@@ -144,6 +149,10 @@ class ReportDataEventInline(admin.TabularInline):
     model = ReportDataEvent
     extra = 0
     ordering = ['-created']
+    fieldsets = (
+        (None, {'fields': ('report_user', 'report_presence', 'report_reason', 'report_additional_info',)}),
+    )
+    list_display = ['report_user', 'report_presence', 'report_reason', 'report_additional_info']
 
 
 @admin.register(AcademicGroup)
@@ -308,8 +317,11 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     count.short_description = 'НБ/ПР/ВСЬОГО'
 
     def group(self, obj):
-        group = None
-        return obj.report_event.academic_group.name
+        try:
+            return obj.report_event.academic_group.name
+        except:
+            return None
+
         # if obj.report_creator.role == 'student':
         #     m_g = MemberGroup.objects.filter(member_user=obj.report_creator).first()
         #     if m_g:
