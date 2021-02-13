@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from .utils.calendar import EventCalendar
 
 from datetime import date
-
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from urllib.parse import urlencode
 from django.shortcuts import redirect
@@ -20,6 +20,8 @@ from django.db.models.query import Q
 
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 from import_export.admin import ExportActionMixin
+
+from tabular_export.admin import export_to_csv_action, export_to_excel_action, export_to_excel_response
 
 from .models import *
 
@@ -40,7 +42,17 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ReportDataEvent)
 class ReportDataEventAdmin(admin.ModelAdmin):
-    list_display = ['report_user', 'report_presence']
+    list_display = ['report_user', 'report_presence', 'user_event_creator']
+    list_filter = ('report_data_user_data__report_event',)
+    date_hierarchy = 'report_data_user_data__report_event__day'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            queryset = queryset.filter()
+        else:
+            queryset = queryset.none()
+        return queryset
 
 
 @admin.register(Lecture)
@@ -125,10 +137,14 @@ class UserEventInline(admin.TabularInline):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
-            return ('user',)
+            return ('user', )
         else:
             return super(UserEventInline, self).get_readonly_fields(request, obj)
 
+    fieldsets = (
+        (None, {'fields': ('user', 'presence', 'reason', 'additional_info',)}),
+    )
+    list_display = ['user', 'presence', 'reason', 'additional_info']
 
 @admin.register(LectureName)
 class LectureNameAdmin(admin.ModelAdmin):
@@ -149,10 +165,11 @@ class ReportDataEventInline(admin.TabularInline):
     model = ReportDataEvent
     extra = 0
     ordering = ['-created']
-    fieldsets = (
-        (None, {'fields': ('report_user', 'report_presence', 'report_reason', 'report_additional_info',)}),
-    )
-    list_display = ['report_user', 'report_presence', 'report_reason', 'report_additional_info']
+
+    # fieldsets = (
+    #     (None, {'fields': ('report_user', 'report_presence', 'report_reason', 'report_additional_info',)}),
+    # )
+    # list_display = ['report_user', 'report_presence', 'report_reason', 'report_additional_info']
 
 
 @admin.register(AcademicGroup)
@@ -188,7 +205,6 @@ class AcademicGroupAdmin(admin.ModelAdmin):
             queryset = queryset.annotate(
                 students_count=Count('membergroup'),
             )
-            print('ttttt', queryset)
             return queryset
 
         queryset = queryset.annotate(
@@ -282,7 +298,7 @@ class EventListFilter(admin.SimpleListFilter):
         else:
             return queryset
 
-from tabular_export.admin import export_to_csv_action, export_to_excel_action, export_to_excel_response
+
 @admin.register(ReportUserEvent)
 class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
@@ -291,8 +307,15 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     inlines = [
             ReportDataEventInline,
         ]
-    list_display = ['report_creator', 'role', '_day', 'report_event', 'group', 'count']
+    list_display = ['report_creator', 'role', '_day', 'index_number', 'report_event', 'group', 'count']
     date_hierarchy = 'report_event__day'
+    ordering = ['report_event__day',]
+
+    def index_number(self, obj):
+        return obj.report_event.index_number
+    index_number.admin_order_field = 'report_event__index_number__name'
+    index_number.short_description = 'Пара'
+
     #import_id_fields = ('report_event__lecture',)
     #fields = ('report_event__lecture', 'role', 'report_event', 'count',)
 
@@ -304,10 +327,10 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
         return export_to_excel_response('batch-summary.xlsx', headers, rows)
     export_batch_summary_action.short_description = 'Export Batch Summary'
 
-
     def _day(self, obj):
         return obj.report_event.day.__str__()
     _day.short_description = 'Дата'
+    index_number.admin_order_field = 'report_event__day'
 
     def count(self, obj):
         all_users = ReportDataEvent.objects.filter(report_data_user_data=obj).count()
@@ -341,7 +364,12 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
         if request.user.is_superuser:
             queryset = queryset.filter()
         else:
-            queryset = queryset.filter(report_event__academic_group__department__head=request.user)
+            role = request.user.role
+            if role == 'head_department':
+                queryset = queryset.filter(report_event__academic_group__department__head=request.user)
+            if role == 'curator':
+                queryset = queryset.filter(report_event__academic_group__curator=request.user).\
+                    exclude(report_creator=request.user)
 
         return queryset
 
@@ -351,7 +379,6 @@ class EventAdmin(admin.ModelAdmin):
     form = MyCustomForm
     list_display = ['lecture', 'academic_group', 'index_number', 'day', 'custom_column']
     list_filter = ('academic_group', )
-    #readonly_fields = ('lecture', 'academic_group', 'index_number', 'day', 'notes')
     date_hierarchy = 'day'
     ordering = ('day', 'index_number')
     inlines = [
@@ -374,7 +401,6 @@ class EventAdmin(admin.ModelAdmin):
 
     # define the row x column value here
     def custom_column(self, obj):
-        from django.utils.html import format_html
         request = getattr(self, 'request', None)
         if request:
             if request.user.is_superuser:
@@ -433,7 +459,6 @@ class EventAdmin(admin.ModelAdmin):
         setattr(ModelFormWithRequest, 'user', request.user)
         return ModelFormWithRequest
 
-
     def students(self, obj):
         return obj.students()
 
@@ -446,6 +471,29 @@ class EventAdmin(admin.ModelAdmin):
             super().save_model(request, obj, form, change)
         except Exception as e:
             self.message_user(request, str(e), level=messages.ERROR)
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model != UserEvent:
+            return super(EventAdmin, self).save_formset(request, form, formset, change)
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if not instance.pk:
+                instance.request_user = request.user
+            instance.request_user = request.user
+            instance.save()
+        formset.save_m2m()
+
+    # def save_formset(self, request, form, formset, change):
+    #     if formset.model != UserEventInline:
+    #         return super(EventAdmin, self).save_formset(request, form, formset, change)
+    #     instances = formset.save(commit=False)
+    #     for instance in instances:
+    #         print('22222222')
+    #         if not instance.pk:
+    #             print('fweweqwe')
+    #             instance.user_request = request.user
+    #         instance.save()
+    #     formset.save_m2m()
 
     # fieldsets = [
     #     (None,               {'fields': ['name']}),

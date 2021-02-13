@@ -315,11 +315,13 @@ class Event(models.Model):
                                                                   report_creator=self.user,
                                                                   )
 
-                for event in user_events:
-                    ReportDataEvent.objects.create(
-                        report_data_user_data=new_event_report,
-                        report_user=event.user.user,
-                        )
+                #for event in user_events:
+
+                    # ReportDataEvent.objects.create(
+                    #     report_data_user_data=new_event_report,
+                    #     report_user=event.user.user,
+                    #     user_event_creator=self.user
+                    #     )
 
                 UserEvent.objects.filter(event=self).update(presence=False,
                                                                           reason=None,
@@ -396,6 +398,13 @@ class UserEvent(CoreModel):
                                        blank=True,
                                        verbose_name='Додаткова інформація')
 
+    user_event_creator = models.ForeignKey(User,
+                                           related_name='user_event_creator',
+                                           null=True,
+                                           blank=True,
+                                           default=None,
+                                           on_delete=models.DO_NOTHING)
+
     def __str__(self):
         return f'{self.user} -> {self.event.lecture.name}'
 
@@ -430,25 +439,26 @@ class UserEvent(CoreModel):
 
     def save(self, *args, **kwargs):
         report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
-        print(self.user)
+#        print(self.request)
         if ReportDataEvent.objects.filter(report_data_user_data=report_event,
                                           report_user=self.user.user,
-                                          protected=True).exists():
+                                          user_event_creator = self.request_user).exists():
 
-            print('eeee')
+            pass
         else:
-            print('tttt')
             super().save(*args, **kwargs)
-            ReportDataEvent.objects.filter(report_data_user_data=report_event,
-                                           report_user=self.user.user).update(
-                                            report_presence=self.presence,
-                                            report_reason=self.reason,
-                                            report_additional_info=self.additional_info,
-                                            protected=True,
+            ReportDataEvent.objects.create(report_data_user_data=report_event,
+                                           report_user=self.user.user,
+                                           user_event_creator = self.request_user,
+                                           report_presence=self.presence,
+                                           report_reason=self.reason,
+                                           report_additional_info=self.additional_info,
+                                           protected=True
             )
             UserEvent.objects.filter(pk=self.id).update(presence=False,
                                                         reason=None,
-                                                        additional_info=None)
+                                                        additional_info=None,
+                                                        )
 
 
 class ReportUserEvent(CoreModel):
@@ -517,6 +527,13 @@ class ReportDataEvent(CoreModel):
                                               verbose_name='Додаткова інформація')
 
     protected = models.BooleanField(default=False)
+
+    user_event_creator = models.ForeignKey(User,
+                                           related_name='report_user_event_creator',
+                                           null=True,
+                                           blank=True,
+                                           default=None,
+                                           on_delete=models.DO_NOTHING)
 
 
 class AbstractModel(Event):
