@@ -307,7 +307,7 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     inlines = [
             ReportDataEventInline,
         ]
-    list_display = ['report_creator', 'role', '_day', 'index_number', 'report_event', 'group', 'count']
+    list_display = ['report_creator', 'role', '_day', 'index_number', 'report_event', 'group', 'count', 'submitted']
     date_hierarchy = 'report_event__day'
     ordering = ['report_event__day',]
 
@@ -338,6 +338,20 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
 
         return f'{all_users-present_users}/{present_users}/{all_users}'
     count.short_description = 'НБ/ПР/ВСЬОГО'
+
+    def submitted(self, obj):
+        curator = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                       report_creator__role='curator').exists() else 'K'
+        headman = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                       report_creator__role='headman').exists() else 'C'
+        teacher = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                       report_creator__role='teacher').exists() else 'B'
+        if curator == '' and headman == '' and teacher == '':
+            return '+'
+
+        return f'{curator} {headman} {teacher}'
+    submitted.short_description = 'Не Подано'
+
 
     def group(self, obj):
         try:
