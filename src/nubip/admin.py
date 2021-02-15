@@ -333,8 +333,14 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     index_number.admin_order_field = 'report_event__day'
 
     def count(self, obj):
-        all_users = ReportDataEvent.objects.filter(report_data_user_data=obj).count()
-        present_users = ReportDataEvent.objects.filter(report_data_user_data=obj, report_presence=True).count()
+        all_users = ReportDataEvent.objects.filter(report_data_user_data=obj,
+                                                   user_event_creator=obj.report_creator).count()
+            #filter(Q(user_event_creator=obj.report_creator) | Q(user_event_creator__isnull=True)).count()
+
+        present_users = ReportDataEvent.objects.filter(report_data_user_data=obj,
+                                                       report_presence=True,
+                                                       user_event_creator=obj.report_creator).count()
+           # .filter(Q(user_event_creator=obj.report_creator) | Q(user_event_creator__isnull=True)).count()
 
         return f'{all_users-present_users}/{present_users}/{all_users}'
     count.short_description = 'НБ/ПР/ВСЬОГО'

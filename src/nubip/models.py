@@ -315,13 +315,13 @@ class Event(models.Model):
                                                                   report_creator=self.user,
                                                                   )
 
-                #for event in user_events:
-
-                    # ReportDataEvent.objects.create(
-                    #     report_data_user_data=new_event_report,
-                    #     report_user=event.user.user,
-                    #     user_event_creator=self.user
-                    #     )
+                # for event in user_events:
+                #
+                #     ReportDataEvent.objects.create(
+                #         report_data_user_data=new_event_report,
+                #         report_user=event.user.user,
+                #         user_event_creator=self.user
+                #         )
 
                 UserEvent.objects.filter(event=self).update(presence=False,
                                                                           reason=None,
@@ -438,18 +438,18 @@ class UserEvent(CoreModel):
             raise ValidationError(f'Додайте додаткову інформацію про причину вітсутності для {self.user}!')
 
     def save(self, *args, **kwargs):
-        report_event = ReportUserEvent.objects.filter(report_event=self.event).first()
+        report_event = ReportUserEvent.objects.filter(report_event=self.event, report_creator=self.request_user).first()
 #        print(self.request)
         if ReportDataEvent.objects.filter(report_data_user_data=report_event,
                                           report_user=self.user.user,
-                                          user_event_creator = self.request_user).exists():
+                                          user_event_creator=self.request_user).exists():
 
             pass
         else:
             super().save(*args, **kwargs)
             ReportDataEvent.objects.create(report_data_user_data=report_event,
                                            report_user=self.user.user,
-                                           user_event_creator = self.request_user,
+                                           user_event_creator=self.request_user,
                                            report_presence=self.presence,
                                            report_reason=self.reason,
                                            report_additional_info=self.additional_info,
