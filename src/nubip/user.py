@@ -81,8 +81,8 @@ class User(CoreModel, models.AbstractUser):
     @property
     def name(self):
         if self.first_name and self.last_name:
-            return '{} {}'.format(self.first_name,
-                                  self.last_name)
+            return '{} {}'.format(self.last_name,
+                                  self.first_name)
         elif self.first_name:
             return '{}'.format(self.first_name)
         else:

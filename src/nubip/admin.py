@@ -133,7 +133,7 @@ class UserProfileInline(admin.TabularInline):
 class UserEventInline(admin.TabularInline):
     model = UserEvent
     extra = 0
-    ordering = ['-created']
+    ordering = ['user__user__last_name']
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
@@ -164,7 +164,7 @@ class LectureNameAdmin(admin.ModelAdmin):
 class ReportDataEventInline(admin.TabularInline):
     model = ReportDataEvent
     extra = 0
-    ordering = ['-created']
+    ordering = ['report_user__last_name']
 
     # fieldsets = (
     #     (None, {'fields': ('report_user', 'report_presence', 'report_reason', 'report_additional_info',)}),
