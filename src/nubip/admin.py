@@ -346,12 +346,19 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     count.short_description = 'НБ/ПР/ВСЬОГО'
 
     def submitted(self, obj):
+        tutors = TutorName.objects.filter(lecture=obj.report_event.lecture)
+        if obj.report_event.academic_group.curator in [tutor.teacher for tutor in tutors]:
+            teacher = 'K/B' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                              report_creator__role='curator').exists() else 'B'
+        else:
+            teacher = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                           report_creator__role='teacher').exists() else 'B'
+
         curator = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
                                                        report_creator__role='curator').exists() else 'K'
         headman = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
                                                        report_creator__role='headman').exists() else 'C'
-        teacher = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
-                                                       report_creator__role='teacher').exists() else 'B'
+
         if curator == '' and headman == '' and teacher == '':
             return '+'
 
@@ -388,8 +395,8 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
             if role == 'head_department':
                 queryset = queryset.filter(report_event__academic_group__department__head=request.user)
             if role == 'curator':
-                queryset = queryset.filter(report_event__academic_group__curator=request.user).\
-                    exclude(report_creator=request.user)
+                queryset = queryset.filter(report_event__academic_group__curator=request.user)
+                    #exclude(report_creator=request.user)
 
         return queryset
 
