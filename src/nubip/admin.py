@@ -309,7 +309,7 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
         ]
     list_display = ['report_creator', 'role', '_day', 'index_number', 'report_event', 'group', 'count', 'submitted']
     date_hierarchy = 'report_event__day'
-    ordering = ['report_event__day',]
+    ordering = ['report_event__day', 'report_event__academic_group__name', 'report_event__index_number__name']
 
     def index_number(self, obj):
         return obj.report_event.index_number
@@ -330,7 +330,7 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     def _day(self, obj):
         return obj.report_event.day.__str__()
     _day.short_description = 'Дата'
-    index_number.admin_order_field = 'report_event__day'
+    _day.admin_order_field = 'report_event__day'
 
     def count(self, obj):
         all_users = ReportDataEvent.objects.filter(report_data_user_data=obj,
