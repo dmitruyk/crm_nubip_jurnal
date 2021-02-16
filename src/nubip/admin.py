@@ -166,10 +166,10 @@ class ReportDataEventInline(admin.TabularInline):
     extra = 0
     ordering = ['report_user__last_name']
 
-    # fieldsets = (
-    #     (None, {'fields': ('report_user', 'report_presence', 'report_reason', 'report_additional_info',)}),
-    # )
-    # list_display = ['report_user', 'report_presence', 'report_reason', 'report_additional_info']
+    fieldsets = (
+        (None, {'fields': ('report_user', 'report_presence', 'report_reason', 'report_additional_info',)}),
+    )
+    list_display = ['report_user', 'report_presence', 'report_reason', 'report_additional_info']
 
 
 @admin.register(AcademicGroup)
