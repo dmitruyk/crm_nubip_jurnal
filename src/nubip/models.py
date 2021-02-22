@@ -438,27 +438,32 @@ class UserEvent(CoreModel):
             raise ValidationError(f'Додайте додаткову інформацію про причину вітсутності для {self.user}!')
 
     def save(self, *args, **kwargs):
-        report_event = ReportUserEvent.objects.filter(report_event=self.event, report_creator=self.request_user).first()
-#        print(self.request)
-        if ReportDataEvent.objects.filter(report_data_user_data=report_event,
-                                          report_user=self.user.user,
-                                          user_event_creator=self.request_user).exists():
+        try:
+            if self.request_user:
+                report_event = ReportUserEvent.objects.filter(report_event=self.event, report_creator=self.request_user).first()
+        #        print(self.request)
+                if ReportDataEvent.objects.filter(report_data_user_data=report_event,
+                                                  report_user=self.user.user,
+                                                  user_event_creator=self.request_user).exists():
 
-            pass
-        else:
+                    pass
+                else:
+                    super().save(*args, **kwargs)
+                    ReportDataEvent.objects.create(report_data_user_data=report_event,
+                                                   report_user=self.user.user,
+                                                   user_event_creator=self.request_user,
+                                                   report_presence=self.presence,
+                                                   report_reason=self.reason,
+                                                   report_additional_info=self.additional_info,
+                                                   protected=True
+                    )
+
+                    UserEvent.objects.filter(pk=self.id).update(presence=False,
+                                                                reason=None,
+                                                                additional_info=None,
+                                                                )
+        except:
             super().save(*args, **kwargs)
-            ReportDataEvent.objects.create(report_data_user_data=report_event,
-                                           report_user=self.user.user,
-                                           user_event_creator=self.request_user,
-                                           report_presence=self.presence,
-                                           report_reason=self.reason,
-                                           report_additional_info=self.additional_info,
-                                           protected=True
-            )
-            UserEvent.objects.filter(pk=self.id).update(presence=False,
-                                                        reason=None,
-                                                        additional_info=None,
-                                                        )
 
 
 class ReportUserEvent(CoreModel):
@@ -542,6 +547,14 @@ class AbstractModel(Event):
 
     def __str__(self):
         return f'{self.name}'
+
+
+class ReportModel(CoreModel):
+    day = models.DateField(u'Дата проведення', help_text=u'Місяць число рік')
+
+    class Meta:
+        verbose_name_plural = "Зведений Звіт"
+
 
 
 class GroupEventCreation(CoreModel):
