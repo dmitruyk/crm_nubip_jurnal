@@ -9,10 +9,10 @@ services:
     restart: unless-stopped
     env_file:
       - app.env
-    environment:
-      - debug=${DEBUG}
-      - secret_key=${SECRET_KEY}
-      - database_url=${DATABASE_URL}
+#    environment:
+#      - debug=${DEBUG}
+#      - secret_key=${SECRET_KEY}
+#      - database_url=${DATABASE_URL}
   postgres:
     image: postgres:10
     environment:
