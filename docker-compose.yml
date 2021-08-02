@@ -2,28 +2,28 @@ version: '3'
 services:
   app:
     build: src/
-#    depends_on:
-#      - postgres
+    depends_on:
+      - postgres
     volumes:
       - static_data:/test/static/
     restart: unless-stopped
     env_file:
       - app.env
-#    environment:
-#      - debug=${DEBUG}
-#      - secret_key=${SECRET_KEY}
-#      - database_url=${DATABASE_URL}
-#  postgres:
-#    image: postgres:10
-#    environment:
-#      - POSTGRES_DB=db
-#      - POSTGRES_USER=test
-#      - POSTGRES_PASSWORD=test
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - pg_data:/var/lib/postgresql/data/
-#    restart: unless-stopped
+    environment:
+      - debug=${DEBUG}
+      - secret_key=${SECRET_KEY}
+      - database_url=${DATABASE_URL}
+  postgres:
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    restart: unless-stopped
   webserver:
     image: nginx:mainline-alpine
     environment:
@@ -32,10 +32,21 @@ services:
       - "80:80"
     depends_on:
       - app
+    labels: # new
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=Host(`django.localhost`)"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - static_data:/test/static/:ro
     restart: unless-stopped
+  traefik: # new
+    image: traefik:v2.2
+    ports:
+      - 8008:80
+      - 8081:8080
+    volumes:
+      - "$PWD/traefik.dev.toml:/etc/traefik/traefik.toml"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 volumes:
-#  pg_data:
+  pg_data:
