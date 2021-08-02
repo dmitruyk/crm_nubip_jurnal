@@ -1,0 +1,71 @@
+<!-- sales/templates/admin/sale_summary_change_list.html -->
+
+{% extends "admin/change_list.html" %}
+
+{% block content_title %}
+    <h1> Sales Summary </h1>
+{% endblock %}
+{% load humanize %}
+{% block result_list %}
+    <!-- Our content goes here... -->
+
+    <div class="results">
+        <table>
+        <thead>
+          <tr>
+            <th>
+              <div class="text">
+                <a href="#">Category</a>
+              </div>
+            </th>
+            <th>
+              <div class="text">
+                <a href="#">Total</a>
+              </div>
+            </th>
+            <th>
+              <div class="text">
+                <a href="#">Total Sales</a>
+              </div>
+            </th>
+            <th>
+              <div class="text">
+                <a href="#">
+                  <strong>% Of Total Sales</strong>
+                </a>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in summary %}
+          <tr class="{% cycle 'row1' 'row2' %}">
+            <td> {{ row.sale__category__name }} </td>
+            <td> {{ row.total | intcomma }} </td>
+            <td> {{ row.total_sales | default:0 | intcomma }}$ </td>
+            <td>
+              <strong>
+              {{ row.summary_total.total_sales | default:0 | intcomma}}
+              </strong>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="results">
+        <table>
+            <!-- ... -->
+            <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
+                <td> Total </td>
+                <td> {{ summary_total.total | intcomma }} </td>
+                <td> {{ summary_total.total_sales | default:0 }}$ </td>
+                <td> 100% </td>
+            </tr>
+        </table>
+    </div>
+    <!-- ... -->
+{% endblock %}
+
+{% block pagination %}{% endblock %}

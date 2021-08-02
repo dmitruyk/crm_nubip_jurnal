@@ -2,28 +2,28 @@ version: '3'
 services:
   app:
     build: src/
-#    depends_on:
-#      - postgres
+    depends_on:
+      - postgres
     volumes:
       - static_data:/test/static/
     restart: unless-stopped
     env_file:
       - app.env
-#    environment:
-#      - debug=${DEBUG}
-#      - secret_key=${SECRET_KEY}
-#      - database_url=${DATABASE_URL}
-#  postgres:
-#    image: postgres:10
-#    environment:
-#      - POSTGRES_DB=db
-#      - POSTGRES_USER=test
-#      - POSTGRES_PASSWORD=test
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - pg_data:/var/lib/postgresql/data/
-#    restart: unless-stopped
+    environment:
+      - debug=${DEBUG}
+      - secret_key=${SECRET_KEY}
+      - database_url=${DATABASE_URL}
+  postgres:
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    restart: unless-stopped
   webserver:
     image: nginx:mainline-alpine
     environment:
@@ -37,6 +37,49 @@ services:
       - static_data:/test/static/:ro
     restart: unless-stopped
 
+# Reverse proxy server with ssl support
+  traefik:
+    image: traefik:alpine
+    networks:
+      - traefik-net
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    command: >
+      --web
+      --docker
+      --docker.swarmmode
+      --logLevel=INFO
+      --accessLog
+      --docker.domain=traefik
+      --docker.watch
+      --entrypoints="Name:http Address::80"
+      --entrypoints="Name:https Address::443 TLS"
+      --acme="true"
+      --acme.caServer="https://acme-v02.api.letsencrypt.org/directory"
+      --acme.domains="eae.nubip.pp.ua"
+      --acme.email="dmitruyk@gmail.com"
+      --acme.storage=/certificates/acme.json
+      --acme.entryPoint=https
+      --acme.httpChallenge.entryPoint=http
+      --acme.acmelogging="true"
+    volumes:
+      - traefik:/certificates
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+
+networks:
+  traefik-net:
+    name: traefik-net
+
+
 volumes:
-#  pg_data:
+  traefik:
+  pg_data:
   static_data:

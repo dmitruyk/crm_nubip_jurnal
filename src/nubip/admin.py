@@ -303,7 +303,7 @@ class EventListFilter(admin.SimpleListFilter):
 class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
     #search_fields = ('member__name', 'group')
     actions = (export_to_excel_action, export_to_csv_action, 'export_batch_summary_action')
-    list_filter = (('report_event__day', DateRangeFilter), 'report_event__lecture', EventListFilter, ('report_event__day', DateFieldListFilter),)
+    list_filter = (('report_event__day', DateRangeFilter), EventListFilter, ('report_event__day', DateFieldListFilter),'report_event__lecture',)
     inlines = [
             ReportDataEventInline,
         ]
@@ -399,6 +399,23 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
                     #exclude(report_creator=request.user)
 
         return queryset
+
+
+from .models import Event
+from django import forms
+from bootstrap_datepicker_plus import DatePickerInput
+
+class CreateForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields =[
+            "day",
+        ]
+
+    widgets = {
+        'Date': DatePickerInput(),
+    }
+
 
 
 @admin.register(Event)
@@ -569,6 +586,84 @@ class FGEVInline(admin.TabularInline):
     model = FGEV
     extra = 0
     #ordering = ['-gev_event__gev_event__lecture__name']
+
+
+from django.contrib.admin import SimpleListFilter
+
+
+class CountryFilter(SimpleListFilter):
+    title = 'Академічна група' # or use _('country') for translated title
+    parameter_name = 'academic_group'
+
+    def lookups(self, request, model_admin):
+        academic_groups = set([report_data for report_data in AcademicGroup.objects.all()])
+        return [(g.id, g.name) for g in academic_groups]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            academic_group = AcademicGroup.objects.filter(pk=self.value()).first()
+            # member_users = MemberGroup.objects.filter(member_group=academic_group)
+            # users = [member.member_user for member in member_users]
+            q = queryset.filter(academic_group=academic_group)
+            print(len(q))
+            return q
+        # if self.value():
+        #     return queryset.filter(country__id__exact=self.value())
+
+
+@admin.register(ReportModel)
+class ReportModelModelAdmin(admin.ModelAdmin):
+    list_display = ['custom_column']
+    list_filter = (CountryFilter, ('day', DateRangeFilter))
+    change_list_template = 'admin/sale_summary_change_list.html'
+    date_hierarchy = 'day'
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(
+            request,
+            extra_context=extra_context,
+        )
+        try:
+            qs = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+        print(qs)
+        print('----')
+        metrics = {
+            'total': Count('id'),
+            'total_sales': Count('pk'),
+        }
+        ls = list(
+            qs.values('academic_group')
+            .annotate(**metrics)
+            .order_by('-day')
+        )
+        print(ls)
+        response.context_data['summary'] = ls
+        response.context_data['summary_total'] = dict(
+            qs.aggregate(**metrics)
+        )
+        return response
+
+    def custom_column(self, obj):
+        print(obj)
+        return obj
+        request = getattr(self, 'request', None)
+        if request:
+            if request.user.is_superuser:
+                if ReportUserEvent.objects.filter(report_event=obj).exists():
+                    return format_html(
+                        '<span style="color: #{};">{}</span>',
+                        '6be073',
+                        'Подано',
+                    )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            queryset = Event.objects.all()
+            print(len(queryset), '----')
+        return queryset
 
 
 # @admin.register(GEV)

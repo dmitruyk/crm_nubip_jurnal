@@ -250,7 +250,7 @@ class Event(models.Model):
                                      verbose_name='Заняття за розкладом')
 
 
-    day = models.DateField(u'Дата проведення', help_text=u'Місяць число рік')
+    day = models.DateField(u'Дата проведення', help_text=u'Місяць число рік', )
     #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     #end_time = models.TimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
