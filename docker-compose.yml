@@ -34,7 +34,7 @@ services:
       - app
     labels: # new
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`django.localhost`)"
+      - "traefik.http.routers.django.rule=Host(`eae.nubip.pp.ua`)"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - static_data:/test/static/:ro
