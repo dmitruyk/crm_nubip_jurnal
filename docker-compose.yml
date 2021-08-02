@@ -15,10 +15,10 @@ services:
 #      - database_url=${DATABASE_URL}
   postgres:
     image: postgres:10
-#    environment:
-#      - POSTGRES_DB=db
-#      - POSTGRES_USER=test
-#      - POSTGRES_PASSWORD=test
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
     ports:
       - "5432:5432"
     volumes:
