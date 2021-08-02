@@ -1,56 +1,14 @@
-version: '3.8'
-
+version: '3'
 services:
-  web:
-    build: ./app
-    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; python manage.py runserver 0.0.0.0:8000'
-    volumes:
-      - ./app:/app
-    expose:
-      - 8000
-#    environment:
-#      - DEBUG=1
-#      - DATABASE_URL=postgresql://django_traefik:django_traefik@db:5432/django_traefik
-    env_file:
-      - app.env
-    depends_on:
-      - db
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`django.localhost`)"
-  db:
-    image: postgres:13-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    expose:
-      - 5432
-    environment:
-      - POSTGRES_USER=django_traefik
-      - POSTGRES_PASSWORD=django_traefik
-      - POSTGRES_DB=django_traefik
-  traefik:
-    image: traefik:v2.2
-    ports:
-      - 8008:80
-      - 8081:8080
-    volumes:
-      - "$PWD/traefik.dev.toml:/etc/traefik/traefik.toml"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-
-volumes:
-  postgres_data:
-
-#version: '3'
-#services:
-#  app:
-#    build: src/
+  app:
+    build: src/
 #    depends_on:
 #      - postgres
-#    volumes:
-#      - static_data:/test/static/
-#    restart: unless-stopped
-#    env_file:
-#      - app.env
+    volumes:
+      - static_data:/test/static/
+    restart: unless-stopped
+    env_file:
+      - app.env
 #    environment:
 #      - debug=${DEBUG}
 #      - secret_key=${SECRET_KEY}
@@ -66,62 +24,18 @@ volumes:
 #    volumes:
 #      - pg_data:/var/lib/postgresql/data/
 #    restart: unless-stopped
-#  webserver:
-#    image: nginx:mainline-alpine
-#    environment:
-#      - NGINX_LISTEN=8000
-#    ports:
-#      - "80:80"
-#    depends_on:
-#      - app
-#    volumes:
-#      - ./nginx.conf:/etc/nginx/nginx.conf
-#      - static_data:/test/static/:ro
-#    restart: unless-stopped
-#
-## Reverse proxy server with ssl support
-#  traefik:
-#    image: traefik:alpine
-#    networks:
-#      - traefik-net
-#    ports:
-#      - 80:80
-#      - 443:443
-#      - 8080:8080
-#    command: >
-#      --web
-#      --docker
-#      --docker.swarmmode
-#      --logLevel=INFO
-#      --accessLog
-#      --docker.domain=traefik
-#      --docker.watch
-#      --entrypoints="Name:http Address::80"
-#      --entrypoints="Name:https Address::443 TLS"
-#      --acme="true"
-#      --acme.caServer="https://acme-v02.api.letsencrypt.org/directory"
-#      --acme.domains="eae.nubip.pp.ua"
-#      --acme.email="dmitruyk@gmail.com"
-#      --acme.storage=/certificates/acme.json
-#      --acme.entryPoint=https
-#      --acme.httpChallenge.entryPoint=http
-#      --acme.acmelogging="true"
-#    volumes:
-#      - traefik:/certificates
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    deploy:
-#      replicas: 1
-#      placement:
-#        constraints:
-#          - node.role == manager
-#
-#
-#networks:
-#  traefik-net:
-#    name: traefik-net
-#
-#
-#volumes:
-#  traefik:
+  webserver:
+    image: nginx:mainline-alpine
+    environment:
+      - NGINX_LISTEN=8000
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_data:/test/static/:ro
+    restart: unless-stopped
+
+volumes:
 #  pg_data:
-#  static_data:
