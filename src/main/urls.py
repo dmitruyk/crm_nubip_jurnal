@@ -21,5 +21,6 @@ from django.conf import settings
 
 urlpatterns = [
     url('', admin.site.urls),
-    url(r'^', include('nubip.urls')),
+    #url(r'^', include('nubip.urls')),
+    path(r'', include(('nubip.urls', 'nubip'), namespace='nubip')),
 ]

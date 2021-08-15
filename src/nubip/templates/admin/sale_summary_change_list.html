@@ -40,7 +40,7 @@
         <tbody>
           {% for row in summary %}
           <tr class="{% cycle 'row1' 'row2' %}">
-              <td> {{ row.academic_group__name }} </td>
+              <td> <a href="{% url 'nubip:details' %}">{{ row.academic_group__name }}</a> </td>
               <td> {{ row.teacher_presence | intcomma }} </td>
               <td> {{ row.headman_presence | default:0 | intcomma }} </td>
             <td>
