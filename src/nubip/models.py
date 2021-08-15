@@ -165,6 +165,7 @@ class LectureName(CoreModel):
 
     class Meta:
         verbose_name_plural = "Перелік дисциплін"
+        ordering = ["name"]
 
     name = models.CharField(null=True,
                             blank=True,

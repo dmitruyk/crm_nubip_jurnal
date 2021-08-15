@@ -43,6 +43,7 @@ class User(CoreModel, models.AbstractUser):
     class Meta:
         db_table = u'user'
         verbose_name_plural = "Користувачі"
+        ordering = ["last_name"]
 
     objects = UserManager()
 
