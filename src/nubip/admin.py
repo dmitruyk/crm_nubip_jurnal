@@ -666,11 +666,13 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                                                              user_event_creator__role='headman',
                                                              report_presence=True)
 
+                total_count = -100 if rde_teacher.count() == 0 \
+                    else round(100 - ((rde_headman.count() * 100) / rde_teacher.count()), 2)
+
                 report_data.append({'academic_group__name': g.name,
                                     'teacher_presence': rde_teacher.count(),
                                     'headman_presence': rde_headman.count(),
-                                    'total': -100 if
-                                    rde_teacher.count() == 0 else 100 - ((rde_headman.count()*100)/rde_teacher.count())
+                                    'total': total_count
                                     }
                 )
 
