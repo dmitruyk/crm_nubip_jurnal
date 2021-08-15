@@ -4,15 +4,20 @@ from .core.core import CoreModel
 from django.utils.translation import ugettext_lazy as _
 from uuid import uuid4
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime, date
+from dateutil.relativedelta import relativedelta
 
 from django.db import models, transaction
+from django.db.models import Q
 from .user import User
 
 from django.core.exceptions import ValidationError
 
+
 from django.http import HttpResponse
 from django.urls import reverse
+
+from django.conf import settings
 
 
 class APIKey(CoreModel):
@@ -250,7 +255,7 @@ class Event(models.Model):
                                      verbose_name='Заняття за розкладом')
 
 
-    day = models.DateField(u'Дата проведення', help_text=u'Місяць число рік', )
+    day = models.DateField(verbose_name='Дата проведення', help_text=u'Місяць число рік', )
     #start_time = models.TimeField(u'Starting time', help_text=u'Starting time')
     #end_time = models.TimeField(u'Final time', help_text=u'Final time')
     notes = models.TextField(u'Textual Notes', help_text=u'Textual Notes', blank=True, null=True)
@@ -295,37 +300,93 @@ class Event(models.Model):
                 html = f'<html><body>Report for {self.lecture}, created by {self.user} already exists!</body></html>'
                 return HttpResponse(html)
 
+    def clean(self):
+        pass
+
+    def easy_save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
             raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
         else:
-            super().save(*args, **kwargs)
-            if self.academic_group and self.user.is_superuser:
-                UserEvent.objects.filter(event=self).delete()
-                students = MemberGroup.objects.filter(member_group=self.academic_group)
-                for student in students:
-                    user = UserProfile.objects.filter(user__id=student.member_user.id).first()
-                    if user:
+            if self.frequency_parameter == '1':
+                if self.user.is_superuser:
+                    if Event.objects.filter(academic_group=self.academic_group,
+                                            index_number=self.index_number,
+                                            day=self.day,
+                                            ).exists():
+                        raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
+                                              f'для групи {self.academic_group} '
+                                              f'дата {self.day} вже існує!')
+                super().save(*args, **kwargs)
+                if self.academic_group and self.user.is_superuser:
+                    UserEvent.objects.filter(event=self).delete()
+                    students = MemberGroup.objects.filter(member_group=self.academic_group)
+                    for student in students:
+                        user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                        if user:
 
-                        g, _ = UserEvent.objects.update_or_create(event=self, user=user)
+                            g, _ = UserEvent.objects.update_or_create(event=self, user=user)
+
+                else:
+                    user_events = UserEvent.objects.filter(event=self)
+                    new_event_report = ReportUserEvent.objects.create(report_event=self,
+                                                                      report_creator=self.user)
+
+                    UserEvent.objects.filter(event=self).update(presence=False,
+                                                                reason=None,
+                                                                additional_info=None)
+            elif self.frequency_parameter == '2':
+                if self.end_date == '':
+                    raise ValidationError('Поле кінцевої дати при такій періодичності не може бути пустим!')
+                if Event.objects.filter(academic_group=self.academic_group,
+                                        index_number=self.index_number,
+                                        day__gte=self.day,
+                                        day__lte=self.end_date,
+                                        ).exists():
+                    raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
+                                          f'для групи {self.academic_group} вже існує!')
+
+
+
+                event_day = self.day
+                last_event_day = datetime.strptime(self.end_date, "%Y-%m-%d").date()
+                week_day = event_day.strftime("%a")
+                week_number = event_day.isocalendar()[1]
+
+                end_week_number = last_event_day.isocalendar()[1]
+
+                for w in range(week_number, end_week_number+1, 1):
+                    __event_day = datetime.strptime(f'{event_day.year}-{w}-{week_day}', "%Y-%W-%a").date()
+
+                    if self.academic_group and self.user.is_superuser:
+                        __event = Event(lecture=self.lecture,
+                                        academic_group=self.academic_group,
+                                        index_number=self.index_number,
+                                        day=__event_day)
+
+                        __event.user = self.users
+                        __event.easy_save()
+
+                        students = MemberGroup.objects.filter(member_group=self.academic_group)
+                        for student in students:
+                            user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                            if user:
+                                g, _ = UserEvent.objects.update_or_create(event=__event, user=user)
+
+                    if settings.DEBUG:
+                        print(week_number, w, __event_day, __event, g, _)
+
+                    #print(date(event_day.year, 1, 1) + relativedelta(weeks=w))
+
+                print(event_day, week_day, week_number, end_week_number, '<+++++++++')
+
+                #raise Exception('In progress!')
+
 
             else:
-                user_events = UserEvent.objects.filter(event=self)
-                new_event_report = ReportUserEvent.objects.create(report_event=self,
-                                                                  report_creator=self.user,
-                                                                  )
-
-                # for event in user_events:
-                #
-                #     ReportDataEvent.objects.create(
-                #         report_data_user_data=new_event_report,
-                #         report_user=event.user.user,
-                #         user_event_creator=self.user
-                #         )
-
-                UserEvent.objects.filter(event=self).update(presence=False,
-                                                                          reason=None,
-                                                                          additional_info=None)
+                raise Exception(f'For parameter: {self.frequency_parameter} method not implemented!')
 
 
 class UserProfile(CoreModel):

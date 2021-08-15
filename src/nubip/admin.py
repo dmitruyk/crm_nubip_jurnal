@@ -1,11 +1,10 @@
-import datetime
+
 import calendar
 from django.urls import reverse
 from calendar import HTMLCalendar
 from django.utils.safestring import mark_safe
 from .utils.calendar import EventCalendar
-
-from datetime import date
+from datetime import datetime, date
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from urllib.parse import urlencode
@@ -235,7 +234,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('name', 'is_staff', 'is_active', 'role')
     fieldsets = (
         (None, {'fields': ('username', 'first_name', 'last_name', 'password', 'role', 'user_permissions', 'groups')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active')}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser')}),
     )
     # add_fieldsets = (
     #     (None, {
@@ -404,6 +403,7 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
 from .models import Event
 from django import forms
 from bootstrap_datepicker_plus import DatePickerInput
+from django.http import HttpResponseRedirect
 
 class CreateForm(forms.ModelForm):
     class Meta:
@@ -512,19 +512,27 @@ class EventAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         try:
             obj.user = request.user
+            print(obj.user, request.user)
+            obj.frequency_parameter = request.POST.get('frequency_parameter')
+            obj.end_date = request.POST.get('end_date')
             super().save_model(request, obj, form, change)
         except Exception as e:
+            #raise Exception(e)
             self.message_user(request, str(e), level=messages.ERROR)
 
     def save_formset(self, request, form, formset, change):
         if formset.model != UserEvent:
+            print('save')
             return super(EventAdmin, self).save_formset(request, form, formset, change)
+        print(request.POST.get('frequency_parameter'))
         instances = formset.save(commit=False)
+        frequency_parameter = request.POST.get('frequency_parameter')
         for instance in instances:
             if not instance.pk:
                 instance.request_user = request.user
             instance.request_user = request.user
-            instance.save()
+            instance.frequency_parameter = frequency_parameter
+            #instance.save(frequency_parameter)
         formset.save_m2m()
 
     # def save_formset(self, request, form, formset, change):
@@ -550,10 +558,10 @@ class EventAdmin(admin.ModelAdmin):
         if request.GET:
             return super().changelist_view(request, extra_context=extra_context)
 
-        date = datetime.date.today()
+        __date = date.today()
         params = ['day', 'month', 'year']
         field_keys = ['{}__{}'.format(self.date_hierarchy, i) for i in params]
-        field_values = [getattr(date, i) for i in params]
+        field_values = [getattr(__date, i) for i in params]
         query_params = dict(zip(field_keys, field_values))
         url = '{}?{}'.format(request.path, urlencode(query_params))
         return redirect(url)
