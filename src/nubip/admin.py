@@ -669,7 +669,8 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 report_data.append({'academic_group__name': g.name,
                                     'teacher_presence': rde_teacher.count(),
                                     'headman_presence': rde_headman.count(),
-                                    'total': -100 if rde_teacher.count() == 0 else (rde_headman.count()*100)/rde_teacher.count()
+                                    'total': -100 if
+                                    rde_teacher.count() == 0 else 100 - ((rde_headman.count()*100)/rde_teacher.count())
                                     }
                 )
 
