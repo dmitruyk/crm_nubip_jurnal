@@ -657,7 +657,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         for g in groups:
             if g is not None:
                 #ev = Event.objects.filter(academic_group=g)
-                report_event = ReportUserEvent.objects.filter(report_event__in=qs)
+                report_event = ReportUserEvent.objects.filter(report_event__in=qs, report_event__academic_group=g)
                 rde_teacher = ReportDataEvent.objects.filter(report_data_user_data__in=report_event,
                                                              user_event_creator__role='teacher',
                                                              report_presence=True)
