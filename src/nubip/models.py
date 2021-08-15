@@ -331,13 +331,31 @@ class Event(models.Model):
                             g, _ = UserEvent.objects.update_or_create(event=self, user=user)
 
                 else:
-                    user_events = UserEvent.objects.filter(event=self)
-                    new_event_report = ReportUserEvent.objects.create(report_event=self,
-                                                                      report_creator=self.user)
+                    print('333333333')
+                    user_events = UserEvent.objects.filter(event=self).first()
+                    new_event_report = ReportUserEvent(report_event=self,
+                                                       report_creator=self.user)
+                    new_event_report.save()
+                    #user_events.save()
 
-                    UserEvent.objects.filter(event=self).update(presence=False,
-                                                                reason=None,
-                                                                additional_info=None)
+                    # for event in user_events:
+                    #
+                    #     ReportDataEvent.objects.create(
+                    #          report_data_user_data=new_event_report,
+                    #          report_user=event.user.user,
+                    #          user_event_creator=self.user
+                    #          )
+
+
+                    # user_events.presence = False
+                    # user_events.reason = None
+                    # user_events.additional_info = None
+                    # user_events.save()
+
+
+                    # UserEvent.objects.filter(event=self).update(presence=False,
+                    #                                            reason=None,
+                    #                                            additional_info=None)
             elif self.frequency_parameter == '2':
                 if self.end_date == '':
                     raise ValidationError('Поле кінцевої дати при такій періодичності не може бути пустим!')
@@ -501,16 +519,21 @@ class UserEvent(CoreModel):
 
     def save(self, *args, **kwargs):
         try:
+            print(1, self.user, 'kkkkkk', 'ooo')
             if self.request_user:
+                print(2)
                 report_event = ReportUserEvent.objects.filter(report_event=self.event, report_creator=self.request_user).first()
         #        print(self.request)
                 if ReportDataEvent.objects.filter(report_data_user_data=report_event,
                                                   report_user=self.user.user,
                                                   user_event_creator=self.request_user).exists():
+                    print(3)
 
                     pass
                 else:
+                    print(4)
                     super().save(*args, **kwargs)
+                    print(5)
                     ReportDataEvent.objects.create(report_data_user_data=report_event,
                                                    report_user=self.user.user,
                                                    user_event_creator=self.request_user,
@@ -524,7 +547,8 @@ class UserEvent(CoreModel):
                                                                 reason=None,
                                                                 additional_info=None,
                                                                 )
-        except:
+        except Exception as e:
+            print('exeption')
             super().save(*args, **kwargs)
 
 

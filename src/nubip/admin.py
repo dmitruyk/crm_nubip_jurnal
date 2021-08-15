@@ -346,22 +346,25 @@ class ReportUserEventAdmin(ExportActionMixin, admin.ModelAdmin):
 
     def submitted(self, obj):
         tutors = TutorName.objects.filter(lecture=obj.report_event.lecture)
-        if obj.report_event.academic_group.curator in [tutor.teacher for tutor in tutors]:
-            teacher = 'K/B' if ReportUserEvent.objects.filter(report_event=obj.report_event,
-                                                              report_creator__role='curator').exists() else 'B'
-        else:
-            teacher = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
-                                                           report_creator__role='teacher').exists() else 'B'
+        try:
+            if obj.report_event.academic_group.curator in [tutor.teacher for tutor in tutors]:
+                teacher = 'K/B' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                                  report_creator__role='curator').exists() else 'B'
+            else:
+                teacher = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                               report_creator__role='teacher').exists() else 'B'
 
-        curator = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
-                                                       report_creator__role='curator').exists() else 'K'
-        headman = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
-                                                       report_creator__role='headman').exists() else 'C'
+            curator = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                           report_creator__role='curator').exists() else 'K'
+            headman = '' if ReportUserEvent.objects.filter(report_event=obj.report_event,
+                                                           report_creator__role='headman').exists() else 'C'
 
-        if curator == '' and headman == '' and teacher == '':
-            return '+'
+            if curator == '' and headman == '' and teacher == '':
+                return '+'
 
-        return f'{curator} {headman} {teacher}'
+            return f'{curator} {headman} {teacher}'
+        except:
+            return f'X X X'
     submitted.short_description = 'Не Подано'
 
 
@@ -517,7 +520,7 @@ class EventAdmin(admin.ModelAdmin):
             obj.end_date = request.POST.get('end_date')
             super().save_model(request, obj, form, change)
         except Exception as e:
-            #raise Exception(e)
+            raise Exception(e)
             self.message_user(request, str(e), level=messages.ERROR)
 
     def save_formset(self, request, form, formset, change):
@@ -532,7 +535,7 @@ class EventAdmin(admin.ModelAdmin):
                 instance.request_user = request.user
             instance.request_user = request.user
             instance.frequency_parameter = frequency_parameter
-            #instance.save(frequency_parameter)
+            instance.save()
         formset.save_m2m()
 
     # def save_formset(self, request, form, formset, change):
@@ -635,18 +638,41 @@ class ReportModelModelAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        print(qs)
-        print('----')
+
         teacher_filters = Q(userevent__presence=True,
                             userevent__user__user__role='teacher')
 
-        headman_filters = Q(userevent__presence=True,
-                            userevent__user__user__role='headman')
+        headman_filters = Q(
+                            )
 
         metrics = {
             'teacher_presence': Count('userevent', teacher_filters),
             'headman_presence': Count('userevent', headman_filters),
         }
+
+        report_data = []
+
+        groups = set(q.academic_group for q in qs)
+
+        for g in groups:
+            if g is not None:
+                ev = Event.objects.filter(academic_group=g)
+                report_event = ReportUserEvent.objects.filter(report_event__in=ev)
+                rde_teacher = ReportDataEvent.objects.filter(report_data_user_data__in=report_event,
+                                                             user_event_creator__role='teacher',
+                                                             report_presence=True)
+
+                rde_headman = ReportDataEvent.objects.filter(report_data_user_data__in=report_event,
+                                                             user_event_creator__role='headman',
+                                                             report_presence=True)
+
+                report_data.append({'academic_group__name': g.name,
+                                    'teacher_presence': rde_teacher.count(),
+                                    'headman_presence': rde_headman.count()}
+                )
+
+
+        print(report_data)
 
 
         ls = list(
@@ -654,8 +680,8 @@ class ReportModelModelAdmin(admin.ModelAdmin):
             .annotate(**metrics)
             .order_by('-day')
         )
-        print(ls)
-        response.context_data['summary'] = ls
+        #print(ls)
+        response.context_data['summary'] = report_data
         response.context_data['summary_total'] = dict(
             qs.aggregate(**metrics)
         )
