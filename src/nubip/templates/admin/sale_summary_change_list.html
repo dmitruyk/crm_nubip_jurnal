@@ -31,7 +31,7 @@
             <th>
               <div class="text">
                 <a href="#">
-                  <strong>% Of Total Sales</strong>
+                  <strong>%</strong>
                 </a>
               </div>
             </th>
@@ -45,7 +45,7 @@
               <td> {{ row.headman_presence | default:0 | intcomma }} </td>
             <td>
               <strong>
-              {{ row.summary_total.total_sales | default:0 | intcomma}}
+              {{ row.total | default:0 | intcomma}}
               </strong>
             </td>
           </tr>
