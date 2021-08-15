@@ -618,7 +618,7 @@ class CountryFilter(SimpleListFilter):
         # if self.value():
         #     return queryset.filter(country__id__exact=self.value())
 
-
+from django.db.models import Value, CharField
 @admin.register(ReportModel)
 class ReportModelModelAdmin(admin.ModelAdmin):
     list_display = ['custom_column']
@@ -637,12 +637,20 @@ class ReportModelModelAdmin(admin.ModelAdmin):
             return response
         print(qs)
         print('----')
+        teacher_filters = Q(userevent__presence=True,
+                            userevent__user__user__role='teacher')
+
+        headman_filters = Q(userevent__presence=True,
+                            userevent__user__user__role='headman')
+
         metrics = {
-            'total': Count('id'),
-            'total_sales': Count('pk'),
+            'teacher_presence': Count('userevent', teacher_filters),
+            'headman_presence': Count('userevent', headman_filters),
         }
+
+
         ls = list(
-            qs.values('academic_group')
+            qs.values('academic_group__name')
             .annotate(**metrics)
             .order_by('-day')
         )
@@ -651,10 +659,10 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         response.context_data['summary_total'] = dict(
             qs.aggregate(**metrics)
         )
+        print(qs.aggregate(**metrics))
         return response
 
     def custom_column(self, obj):
-        print(obj)
         return obj
         request = getattr(self, 'request', None)
         if request:
@@ -670,7 +678,6 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
             queryset = Event.objects.all()
-            print(len(queryset), '----')
         return queryset
 
 

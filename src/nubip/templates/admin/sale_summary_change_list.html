@@ -15,17 +15,17 @@
           <tr>
             <th>
               <div class="text">
-                <a href="#">Category</a>
+                <a href="#">Назва групи</a>
               </div>
             </th>
             <th>
               <div class="text">
-                <a href="#">Total</a>
+                <a href="#">Викладач Присутні</a>
               </div>
             </th>
             <th>
               <div class="text">
-                <a href="#">Total Sales</a>
+                <a href="#">Староста Присутні</a>
               </div>
             </th>
             <th>
@@ -40,9 +40,9 @@
         <tbody>
           {% for row in summary %}
           <tr class="{% cycle 'row1' 'row2' %}">
-            <td> {{ row.sale__category__name }} </td>
-            <td> {{ row.total | intcomma }} </td>
-            <td> {{ row.total_sales | default:0 | intcomma }}$ </td>
+              <td> {{ row.academic_group__name }} </td>
+              <td> {{ row.teacher_presence | intcomma }} </td>
+              <td> {{ row.headman_presence | default:0 | intcomma }} </td>
             <td>
               <strong>
               {{ row.summary_total.total_sales | default:0 | intcomma}}
@@ -59,8 +59,8 @@
             <!-- ... -->
             <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
                 <td> Total </td>
-                <td> {{ summary_total.total | intcomma }} </td>
-                <td> {{ summary_total.total_sales | default:0 }}$ </td>
+                <td> {{ summary_total.teacher_presence | intcomma }} </td>
+                <td> {{ summary_total.headman_presence | default:0 }} </td>
                 <td> 100% </td>
             </tr>
         </table>
