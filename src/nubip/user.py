@@ -79,6 +79,9 @@ class User(CoreModel, models.AbstractUser):
 
     role = db_models.CharField(_('role'), choices=ROLES, null=False, max_length=20, blank=False)
 
+    deducted = db_models.BooleanField(_('deducted'), null=True, blank=True, default=False)
+    deducted_date = db_models.DateField(_('deducted_date'), null=True, blank=True, default=None)
+
     @property
     def name(self):
         if self.first_name and self.last_name:

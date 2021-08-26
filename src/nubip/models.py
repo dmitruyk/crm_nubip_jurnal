@@ -152,6 +152,15 @@ class AcademicGroup(CoreModel):
                                    on_delete=models.DO_NOTHING,
                                    verbose_name='Базова каферда')
 
+    graduation = models.BooleanField(_('graduation'), null=True, blank=True, default=False)
+
+    graduation_date = models.DateField(verbose_name='Дата закінчення навчання',
+                                       help_text=u'Місяць число рік',
+                                       null=True,
+                                       blank=True,
+                                       default=None,
+                                       )
+
     def clean(self):
         if self.curator:
             if self.curator.role not in ['teacher', 'curator', 'head_department']:
@@ -199,7 +208,7 @@ class TutorName(CoreModel):
 class Lecture(CoreModel):
 
     class Meta:
-        verbose_name_plural = "Календар занять"
+        verbose_name_plural = "Порядок занять"
 
     name = models.CharField(null=True,
                             blank=True,
@@ -323,7 +332,8 @@ class Event(models.Model):
                 super().save(*args, **kwargs)
                 if self.academic_group and self.user.is_superuser:
                     UserEvent.objects.filter(event=self).delete()
-                    students = MemberGroup.objects.filter(member_group=self.academic_group)
+                    students = MemberGroup.objects.filter(member_group=self.academic_group).\
+                        filter(~Q(member_user__deducted=True))
                     for student in students:
                         user = UserProfile.objects.filter(user__id=student.member_user.id).first()
                         if user:
@@ -388,7 +398,9 @@ class Event(models.Model):
                         __event.user = self.users
                         __event.easy_save()
 
-                        students = MemberGroup.objects.filter(member_group=self.academic_group)
+                        students = MemberGroup.objects.filter(member_group=self.academic_group).\
+                            filter(~Q(member_user__deducted=True))
+
                         for student in students:
                             user = UserProfile.objects.filter(user__id=student.member_user.id).first()
                             if user:
@@ -402,7 +414,6 @@ class Event(models.Model):
                 print(event_day, week_day, week_number, end_week_number, '<+++++++++')
 
                 #raise Exception('In progress!')
-
 
             else:
                 raise Exception(f'For parameter: {self.frequency_parameter} method not implemented!')

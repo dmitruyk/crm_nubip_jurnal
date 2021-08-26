@@ -56,7 +56,7 @@ class ReportDataEventAdmin(admin.ModelAdmin):
 
 @admin.register(Lecture)
 class LectureAdmin(admin.ModelAdmin):
-    pass
+    ordering = ['name']
 
 
 # def make_assign_to_user_action(user):
@@ -231,10 +231,10 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     model = User
     list_filter = ('role',)
-    list_display = ('name', 'is_staff', 'is_active', 'role')
+    list_display = ('name', 'is_staff', 'is_active', 'role', 'deducted')
     fieldsets = (
         (None, {'fields': ('username', 'first_name', 'last_name', 'password', 'role', 'user_permissions', 'groups')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser')}),
+        ('Permissions', {'fields': ('is_staff', 'deducted', 'deducted_date', 'is_active', 'is_superuser')}),
     )
     # add_fieldsets = (
     #     (None, {
@@ -427,7 +427,7 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ['lecture', 'academic_group', 'index_number', 'day', 'custom_column']
     list_filter = ('academic_group', )
     date_hierarchy = 'day'
-    ordering = ('day', 'index_number')
+    ordering = ('day', '-index_number')
     inlines = [
             UserEventInline,
             # ChargeBoxActionInline,
