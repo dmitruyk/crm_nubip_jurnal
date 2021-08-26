@@ -180,6 +180,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
     list_display = ['name', 'students_count', 'curator', 'department']
     list_filter = ('name', 'course')
     raw_id_fields = ('curator',)
+    ordering = ['name']
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super(AcademicGroupAdmin, self).get_search_results(request, queryset, search_term)

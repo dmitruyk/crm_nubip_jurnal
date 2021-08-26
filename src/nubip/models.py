@@ -115,6 +115,7 @@ class Department(CoreModel):
 class AcademicGroup(CoreModel):
     class Meta:
         verbose_name_plural = "Академічні групи"
+        ordering = ["name"]
 
     COURSE = (
         ('1', '1'),
