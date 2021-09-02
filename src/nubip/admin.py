@@ -698,9 +698,9 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 present_teacher_report = round(((teacher_report_counter * 100) / event_counter), 1)
                 present_headman_report = round(((headman_report_counter * 100) / event_counter), 1)
 
-                total_coefficient = (((present_teacher_report + present_headman_report) / 2) / 10)
+                total_coefficient = (((rde_teacher_counter + rde_headman_counter) / 2) / 10)
 
-                total_count = 0 if total_coefficient == 0 else round(total_coefficient, 0)
+                total_count = 0 if total_coefficient == 0 else round(total_coefficient, 1)
 
                 report_data.append({'academic_group__name': g.name,
                                     'apply_teacher_reports': teacher_report_counter,
