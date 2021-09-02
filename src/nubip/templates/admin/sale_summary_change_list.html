@@ -76,7 +76,7 @@
                 {% if row.total > 8 %}
                      <td style = "color:green; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
                 {% elif row.total > 6  %}
-                     <td style = "color:yellow; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
+                     <td style = "color:orange; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
                 {% else %}
                   <td style = "color:red; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
                   {% endif %}
