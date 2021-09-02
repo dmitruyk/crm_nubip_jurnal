@@ -18,6 +18,16 @@
                 <a href="#">Назва групи</a>
               </div>
             </th>
+              <th>
+              <div class="text">
+                <a href="#">Под зв Вик</a>
+              </div>
+            </th>
+              <th>
+              <div class="text">
+                <a href="#">Под зв Ст</a>
+              </div>
+            </th>
             <th>
               <div class="text">
                 <a href="#">Викладач Присутні</a>
@@ -41,6 +51,8 @@
           {% for row in summary %}
           <tr class="{% cycle 'row1' 'row2' %}">
               <td> <a href="{% url 'nubip:details' %}">{{ row.academic_group__name }}</a> </td>
+              <td> {{ row.present_teacher_report | intcomma }} </td>
+              <td> {{ row.present_headman_report | intcomma }} </td>
               <td> {{ row.teacher_presence | intcomma }} </td>
               <td> {{ row.headman_presence | default:0 | intcomma }} </td>
             <td>

@@ -658,7 +658,22 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         for g in groups:
             if g is not None:
                 #ev = Event.objects.filter(academic_group=g)
+
+                event_counter = qs.count()
+
+                teacher_report_counter = ReportUserEvent.objects.filter(report_event__in=qs,
+                                                                        report_event__academic_group=g,
+                                                                        report_creator__role='teacher').count()
+
+                headman_report_counter = ReportUserEvent.objects.filter(report_event__in=qs,
+                                                                        report_event__academic_group=g,
+                                                                        report_creator__role='headman').count()
+
+
                 report_event = ReportUserEvent.objects.filter(report_event__in=qs, report_event__academic_group=g)
+
+
+
                 rde_teacher = ReportDataEvent.objects.filter(report_data_user_data__in=report_event,
                                                              user_event_creator__role='teacher',
                                                              report_presence=True)
@@ -670,7 +685,13 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 total_count = -100 if rde_teacher.count() == 0 \
                     else round(100 - ((rde_headman.count() * 100) / rde_teacher.count()), 2)
 
+                present_teacher_report = round(((teacher_report_counter * 100) / event_counter), 1)
+
+                present_headman_report = round(((headman_report_counter * 100) / event_counter), 1)
+
                 report_data.append({'academic_group__name': g.name,
+                                    'present_teacher_report': present_teacher_report,
+                                    'present_headman_report': present_headman_report,
                                     'teacher_presence': rde_teacher.count(),
                                     'headman_presence': rde_headman.count(),
                                     'total': total_count
