@@ -669,10 +669,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                                                                         report_event__academic_group=g,
                                                                         report_creator__role='headman').count()
 
-
                 report_event = ReportUserEvent.objects.filter(report_event__in=qs, report_event__academic_group=g)
-
-
 
                 rde_teacher = ReportDataEvent.objects.filter(report_data_user_data__in=report_event,
                                                              user_event_creator__role='teacher',
@@ -681,6 +678,19 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 rde_headman = ReportDataEvent.objects.filter(report_data_user_data__in=report_event,
                                                              user_event_creator__role='headman',
                                                              report_presence=True)
+
+                member_academic_group = MemberGroup.objects.filter(member_group=g).select_related('member_user')
+
+                member_academic_group_counter = User.objects.filter(pk__in=[m.member_user.id for m in member_academic_group],
+                                                                    deducted=False,
+                                                                    deducted_date__isnull=True).count()
+
+                rde_teacher_counter = round((rde_teacher.count() * 100) / (member_academic_group_counter * event_counter), 2)
+
+                rde_headman_counter = round((rde_headman.count() * 100) / (member_academic_group_counter * event_counter), 2)
+
+                print(member_academic_group_counter)
+
 
                 total_count = -100 if rde_teacher.count() == 0 \
                     else round(100 - ((rde_headman.count() * 100) / rde_teacher.count()), 2)
@@ -695,8 +705,9 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                                     'total_events': event_counter,
                                     'present_teacher_report': present_teacher_report,
                                     'present_headman_report': present_headman_report,
-                                    'teacher_presence': rde_teacher.count(),
-                                    'headman_presence': rde_headman.count(),
+
+                                    'teacher_presence': rde_teacher_counter,
+                                    'headman_presence': rde_headman_counter,
                                     'total': total_count
                                     }
                 )
