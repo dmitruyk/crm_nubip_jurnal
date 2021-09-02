@@ -685,12 +685,9 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                                                                     deducted=False,
                                                                     deducted_date__isnull=True).count()
 
-                rde_teacher_counter = round((rde_teacher.count() * 100) / (member_academic_group_counter * event_counter), 2)
+                rde_teacher_counter = round((rde_teacher.count() * 100) / (member_academic_group_counter * teacher_report_counter), 2)
 
-                rde_headman_counter = round((rde_headman.count() * 100) / (member_academic_group_counter * event_counter), 2)
-
-                print(member_academic_group_counter)
-
+                rde_headman_counter = round((rde_headman.count() * 100) / (member_academic_group_counter * headman_report_counter), 2)
 
                 total_count = -100 if rde_teacher.count() == 0 \
                     else round(100 - ((rde_headman.count() * 100) / rde_teacher.count()), 2)
