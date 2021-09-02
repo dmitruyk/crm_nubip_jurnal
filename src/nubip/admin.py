@@ -685,16 +685,22 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                                                                     deducted=False,
                                                                     deducted_date__isnull=True).count()
 
-                rde_teacher_counter = round((rde_teacher.count() * 100) / (member_academic_group_counter * teacher_report_counter), 2)
+                total_teacher_report_member_counter = member_academic_group_counter * teacher_report_counter
 
-                rde_headman_counter = round((rde_headman.count() * 100) / (member_academic_group_counter * headman_report_counter), 2)
+                total_headman_report_member_counter = member_academic_group_counter * headman_report_counter
 
-                total_count = -100 if rde_teacher.count() == 0 \
-                    else round(100 - ((rde_headman.count() * 100) / rde_teacher.count()), 2)
+                rde_teacher_counter = 0  if total_teacher_report_member_counter == 0 else \
+                    round((rde_teacher.count() * 100) / total_teacher_report_member_counter, 2)
+
+                rde_headman_counter = 0 if total_teacher_report_member_counter == 0 else \
+                    round((rde_headman.count() * 100) / total_headman_report_member_counter, 2)
 
                 present_teacher_report = round(((teacher_report_counter * 100) / event_counter), 1)
-
                 present_headman_report = round(((headman_report_counter * 100) / event_counter), 1)
+
+                total_coefficient = (((present_teacher_report + present_headman_report) / 2) / 10)
+
+                total_count = 0 if total_coefficient == 0 else round(total_coefficient, 0)
 
                 report_data.append({'academic_group__name': g.name,
                                     'apply_teacher_reports': teacher_report_counter,

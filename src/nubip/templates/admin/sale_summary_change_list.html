@@ -20,43 +20,43 @@
             </th>
               <th>
               <div class="text">
-                <a href="#">Под Викладач</a>
+                <a href="#">Подано Вик, шт</a>
               </div>
             </th>
               <th>
               <div class="text">
-                <a href="#">Под Cтароста</a>
+                <a href="#">Подано Cт, шт</a>
               </div>
             </th>
               <th>
               <div class="text">
-                <a href="#">Всього звітів</a>
+                <a href="#">Всього звітів, шт</a>
               </div>
             </th>
               <th>
               <div class="text">
-                <a href="#"> % Под зв Вик</a>
+                <a href="#">Подано зв Вик, %</a>
               </div>
             </th>
               <th>
               <div class="text">
-                <a href="#">% Под зв Ст</a>
+                <a href="#">Подано зв Ст, %</a>
               </div>
             </th>
             <th>
               <div class="text">
-                <a href="#">Викладач Присутні</a>
+                <a href="#">Викладач Присутні, %</a>
               </div>
             </th>
             <th>
               <div class="text">
-                <a href="#">Староста Присутні</a>
+                <a href="#">Староста Присутні, %</a>
               </div>
             </th>
             <th>
               <div class="text">
                 <a href="#">
-                  <strong>%</strong>
+                  <strong>Якість</strong>
                 </a>
               </div>
             </th>
@@ -73,11 +73,13 @@
               <td> {{ row.present_headman_report | intcomma }} </td>
               <td> {{ row.teacher_presence | intcomma }} </td>
               <td> {{ row.headman_presence | default:0 | intcomma }} </td>
-            <td>
-              <strong>
-              {{ row.total | default:0 | intcomma}}
-              </strong>
-            </td>
+                {% if row.total > 8 %}
+                     <td style = "color:green; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
+                {% elif row.total > 6  %}
+                     <td style = "color:yellow; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
+                {% else %}
+                  <td style = "color:red; font-weight:bold">{{ row.total | default:0 | intcomma }}</td>
+                  {% endif %}
           </tr>
           {% endfor %}
         </tbody>
@@ -89,9 +91,6 @@
             <!-- ... -->
             <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
                 <td> Total </td>
-                <td> {{ summary_total.teacher_presence | intcomma }} </td>
-                <td> {{ summary_total.headman_presence | default:0 }} </td>
-                <td> 100% </td>
             </tr>
         </table>
     </div>
