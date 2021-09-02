@@ -317,107 +317,148 @@ class Event(models.Model):
     def easy_save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
-            raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
-        else:
-            if self.frequency_parameter == '1':
-                if self.user.is_superuser:
-                    if Event.objects.filter(academic_group=self.academic_group,
-                                            index_number=self.index_number,
-                                            day=self.day,
-                                            ).exists():
-                        raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
-                                              f'для групи {self.academic_group} '
-                                              f'дата {self.day} вже існує!')
-                super().save(*args, **kwargs)
-                if self.academic_group and self.user.is_superuser:
-                    UserEvent.objects.filter(event=self).delete()
-                    students = MemberGroup.objects.filter(member_group=self.academic_group).\
-                        filter(~Q(member_user__deducted=True))
-                    for student in students:
-                        user = UserProfile.objects.filter(user__id=student.member_user.id).first()
-                        if user:
-
-                            g, _ = UserEvent.objects.update_or_create(event=self, user=user)
-
-                else:
-                    print('333333333')
-                    user_events = UserEvent.objects.filter(event=self).first()
-                    new_event_report = ReportUserEvent(report_event=self,
-                                                       report_creator=self.user)
-                    new_event_report.save()
-                    #user_events.save()
-
-                    # for event in user_events:
-                    #
-                    #     ReportDataEvent.objects.create(
-                    #          report_data_user_data=new_event_report,
-                    #          report_user=event.user.user,
-                    #          user_event_creator=self.user
-                    #          )
-
-
-                    # user_events.presence = False
-                    # user_events.reason = None
-                    # user_events.additional_info = None
-                    # user_events.save()
-
-
-                    # UserEvent.objects.filter(event=self).update(presence=False,
-                    #                                            reason=None,
-                    #                                            additional_info=None)
-            elif self.frequency_parameter == '2':
-                if self.end_date == '':
-                    raise ValidationError('Поле кінцевої дати при такій періодичності не може бути пустим!')
-                if Event.objects.filter(academic_group=self.academic_group,
-                                        index_number=self.index_number,
-                                        day__gte=self.day,
-                                        day__lte=self.end_date,
-                                        ).exists():
-                    raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
-                                          f'для групи {self.academic_group} вже існує!')
-
-
-
-                event_day = self.day
-                last_event_day = datetime.strptime(self.end_date, "%Y-%m-%d").date()
-                week_day = event_day.strftime("%a")
-                week_number = event_day.isocalendar()[1]
-
-                end_week_number = last_event_day.isocalendar()[1]
-
-                for w in range(week_number, end_week_number+1, 1):
-                    __event_day = datetime.strptime(f'{event_day.year}-{w}-{week_day}', "%Y-%W-%a").date()
-
+        sid = transaction.savepoint()
+        try:
+            if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
+                raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
+            else:
+                if self.frequency_parameter == '1':
+                    if self.user.is_superuser:
+                        if Event.objects.filter(academic_group=self.academic_group,
+                                                index_number=self.index_number,
+                                                day=self.day,
+                                                ).exists():
+                            raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
+                                                  f'для групи {self.academic_group} '
+                                                  f'дата {self.day} вже існує!')
+                    super().save(*args, **kwargs)
                     if self.academic_group and self.user.is_superuser:
-                        __event = Event(lecture=self.lecture,
-                                        academic_group=self.academic_group,
-                                        index_number=self.index_number,
-                                        day=__event_day)
-
-                        __event.user = self.users
-                        __event.easy_save()
-
+                        UserEvent.objects.filter(event=self).delete()
                         students = MemberGroup.objects.filter(member_group=self.academic_group).\
                             filter(~Q(member_user__deducted=True))
-
                         for student in students:
                             user = UserProfile.objects.filter(user__id=student.member_user.id).first()
                             if user:
-                                g, _ = UserEvent.objects.update_or_create(event=__event, user=user)
 
-                    if settings.DEBUG:
-                        print(week_number, w, __event_day, __event, g, _)
+                                g, _ = UserEvent.objects.update_or_create(event=self, user=user)
 
-                    #print(date(event_day.year, 1, 1) + relativedelta(weeks=w))
+                    else:
+                        print('333333333')
+                        user_events = UserEvent.objects.filter(event=self).first()
+                        new_event_report = ReportUserEvent(report_event=self,
+                                                           report_creator=self.user)
+                        new_event_report.save()
+                        #user_events.save()
 
-                print(event_day, week_day, week_number, end_week_number, '<+++++++++')
+                        # for event in user_events:
+                        #
+                        #     ReportDataEvent.objects.create(
+                        #          report_data_user_data=new_event_report,
+                        #          report_user=event.user.user,
+                        #          user_event_creator=self.user
+                        #          )
 
-                #raise Exception('In progress!')
 
-            else:
-                raise Exception(f'For parameter: {self.frequency_parameter} method not implemented!')
+                        # user_events.presence = False
+                        # user_events.reason = None
+                        # user_events.additional_info = None
+                        # user_events.save()
+
+
+                        # UserEvent.objects.filter(event=self).update(presence=False,
+                        #                                            reason=None,
+                        #                                            additional_info=None)
+                elif self.frequency_parameter == '2':
+                    if self.end_date == '':
+                        raise ValidationError('Поле кінцевої дати при такій періодичності не може бути пустим!')
+                    event_day = self.day
+                    last_event_day = datetime.strptime(self.end_date, "%Y-%m-%d").date()
+                    week_day = event_day.strftime("%a")
+                    week_number = event_day.isocalendar()[1]
+
+                    end_week_number = last_event_day.isocalendar()[1]
+
+                    for w in range(week_number, end_week_number+1, 1):
+                        __event_day = datetime.strptime(f'{event_day.year}-{w}-{week_day}', "%Y-%W-%a").date()
+
+                        if Event.objects.filter(academic_group=self.academic_group,
+                                                index_number=self.index_number,
+                                                day=__event_day,
+                                                ).exists():
+                            raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
+                                                  f'для групи {self.academic_group} на {__event_day} вже існує!')
+
+                        if self.academic_group and self.user.is_superuser:
+                            __event = Event(lecture=self.lecture,
+                                            academic_group=self.academic_group,
+                                            index_number=self.index_number,
+                                            day=__event_day)
+
+                            __event.user = self.users
+                            __event.easy_save()
+
+                            students = MemberGroup.objects.filter(member_group=self.academic_group).\
+                                filter(~Q(member_user__deducted=True))
+
+                            for student in students:
+                                user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                                if user:
+                                    g, _ = UserEvent.objects.update_or_create(event=__event, user=user)
+
+                        if settings.DEBUG:
+                            print(week_number, w, __event_day, __event, g, _)
+
+                elif self.frequency_parameter == '3':
+                    if self.end_date == '':
+                        raise ValidationError('Поле кінцевої дати при такій періодичності не може бути пустим!')
+                    event_day = self.day
+                    last_event_day = datetime.strptime(self.end_date, "%Y-%m-%d").date()
+                    week_day = event_day.strftime("%a")
+                    week_number = event_day.isocalendar()[1]
+
+                    end_week_number = last_event_day.isocalendar()[1]
+
+                    for w in range(week_number, end_week_number+1, 2):
+                        __event_day = datetime.strptime(f'{event_day.year}-{w}-{week_day}', "%Y-%W-%a").date()
+
+                        if Event.objects.filter(academic_group=self.academic_group,
+                                                index_number=self.index_number,
+                                                day=__event_day,
+                                                ).exists():
+                            raise ValidationError(f'Заняття з таким порядковим номером {self.index_number} '
+                                                  f'для групи {self.academic_group} на {__event_day} вже існує!')
+
+                        if self.academic_group and self.user.is_superuser:
+                            __event = Event(lecture=self.lecture,
+                                            academic_group=self.academic_group,
+                                            index_number=self.index_number,
+                                            day=__event_day)
+
+                            __event.user = self.users
+                            __event.easy_save()
+
+                            students = MemberGroup.objects.filter(member_group=self.academic_group).\
+                                filter(~Q(member_user__deducted=True))
+
+                            for student in students:
+                                user = UserProfile.objects.filter(user__id=student.member_user.id).first()
+                                if user:
+                                    g, _ = UserEvent.objects.update_or_create(event=__event, user=user)
+
+                        if settings.DEBUG:
+                            print(week_number, w, __event_day, __event, g, _)
+
+                        #print(date(event_day.year, 1, 1) + relativedelta(weeks=w))
+
+                    print(event_day, week_day, week_number, end_week_number, '<+++++++++')
+                else:
+                    raise Exception(f'For parameter: {self.frequency_parameter} method not implemented!')
+            transaction.savepoint_commit(sid)
+        except Exception as e:
+            transaction.savepoint_rollback(sid)
+            raise Exception(e)
 
 
 class UserProfile(CoreModel):

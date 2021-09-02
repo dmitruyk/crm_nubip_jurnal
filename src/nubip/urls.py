@@ -6,4 +6,5 @@ from . import views
 urlpatterns = [
     #path(r'^api/', include(('nubip.urlpatterns', 'nubip'), namespace='nubip')),
     url(r'^api/', include(views.urlpatterns)),
+    path(r'^dashboard/', include('dash.urls')),
 ]

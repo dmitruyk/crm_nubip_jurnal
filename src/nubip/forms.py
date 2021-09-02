@@ -22,7 +22,7 @@ from django.utils.translation import ugettext_lazy as _
 STATUS_CHOICES = (
     (1, _("Один раз")),
     (2, _("Кожен день тижня")),
-    # (3, _("Maybe relevant")),
+    (3, _("Через один тиждень")),
     # (4, _("Relevant")),
     # (5, _("Leading candidate"))
 )
