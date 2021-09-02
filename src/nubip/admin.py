@@ -690,6 +690,9 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 present_headman_report = round(((headman_report_counter * 100) / event_counter), 1)
 
                 report_data.append({'academic_group__name': g.name,
+                                    'apply_teacher_reports': teacher_report_counter,
+                                    'apply_headman_reports': headman_report_counter,
+                                    'total_events': event_counter,
                                     'present_teacher_report': present_teacher_report,
                                     'present_headman_report': present_headman_report,
                                     'teacher_presence': rde_teacher.count(),

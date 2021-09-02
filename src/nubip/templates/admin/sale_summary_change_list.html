@@ -20,12 +20,27 @@
             </th>
               <th>
               <div class="text">
-                <a href="#">Под зв Вик</a>
+                <a href="#">Под Викладач</a>
               </div>
             </th>
               <th>
               <div class="text">
-                <a href="#">Под зв Ст</a>
+                <a href="#">Под Cтароста</a>
+              </div>
+            </th>
+              <th>
+              <div class="text">
+                <a href="#">Всього звітів</a>
+              </div>
+            </th>
+              <th>
+              <div class="text">
+                <a href="#"> % Под зв Вик</a>
+              </div>
+            </th>
+              <th>
+              <div class="text">
+                <a href="#">% Под зв Ст</a>
               </div>
             </th>
             <th>
@@ -51,6 +66,9 @@
           {% for row in summary %}
           <tr class="{% cycle 'row1' 'row2' %}">
               <td> <a href="{% url 'nubip:details' %}">{{ row.academic_group__name }}</a> </td>
+              <td> {{ row.apply_teacher_reports | default:0 | intcomma }} </td>
+              <td> {{ row.apply_headman_reports | default:0 | intcomma }} </td>
+              <td> {{ row.total_events | default:0 | intcomma }} </td>
               <td> {{ row.present_teacher_report | intcomma }} </td>
               <td> {{ row.present_headman_report | intcomma }} </td>
               <td> {{ row.teacher_presence | intcomma }} </td>
