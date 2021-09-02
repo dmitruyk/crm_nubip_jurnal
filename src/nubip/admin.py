@@ -626,7 +626,7 @@ from django.db.models import Value, CharField
 @admin.register(ReportModel)
 class ReportModelModelAdmin(admin.ModelAdmin):
     list_display = ['custom_column']
-    list_filter = (CountryFilter, ('day', DateRangeFilter))
+    list_filter = (('day', DateRangeFilter), CountryFilter)
     change_list_template = 'admin/sale_summary_change_list.html'
     date_hierarchy = 'day'
 
@@ -659,7 +659,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
             if g is not None:
                 #ev = Event.objects.filter(academic_group=g)
 
-                event_counter = qs.count()
+                event_counter = qs.filter(academic_group=g).count()
 
                 teacher_report_counter = ReportUserEvent.objects.filter(report_event__in=qs,
                                                                         report_event__academic_group=g,
