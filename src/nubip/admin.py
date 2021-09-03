@@ -177,7 +177,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
     inlines = [
             MemberGroupInline,
         ]
-    list_display = ['name', 'students_count', 'curator', 'department']
+    list_display = ['name', 'students_count', 'curator', 'department', 'graduation', 'graduation_date']
     list_filter = ('name', 'course')
     raw_id_fields = ('curator',)
     ordering = ['name']
@@ -232,7 +232,7 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     model = User
     list_filter = ('role',)
-    list_display = ('name', 'is_staff', 'is_active', 'role', 'deducted')
+    list_display = ('name', 'username', 'is_staff', 'is_active', 'role', 'deducted')
     fieldsets = (
         (None, {'fields': ('username', 'first_name', 'last_name', 'password', 'role', 'user_permissions', 'groups')}),
         ('Permissions', {'fields': ('is_staff', 'deducted', 'deducted_date', 'is_active', 'is_superuser')}),
