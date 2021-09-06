@@ -324,7 +324,7 @@ class Event(models.Model):
             if ReportUserEvent.objects.filter(report_event=self, report_creator=self.user,).exists():
                 raise ValidationError(f'Звіт для {self.lecture}, від {self.user} вже подано! ')
             else:
-                if self.frequency_parameter == '1':
+                if self.frequency_parameter == '1' or self.frequency_parameter is None:
                     if self.user.is_superuser:
                         if Event.objects.filter(academic_group=self.academic_group,
                                                 index_number=self.index_number,

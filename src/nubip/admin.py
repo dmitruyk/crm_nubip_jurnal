@@ -505,6 +505,10 @@ class EventAdmin(admin.ModelAdmin):
                 return ModelForm(*args, **kwargs)
 
         setattr(ModelFormWithRequest, 'user', request.user)
+        print(request.user.is_superuser)
+        if obj and request.user.is_superuser is False:
+            ModelForm.base_fields['frequency_parameter'].disabled = True
+            ModelForm.base_fields['end_date'].disabled = True
         return ModelFormWithRequest
 
     def students(self, obj):
@@ -521,7 +525,7 @@ class EventAdmin(admin.ModelAdmin):
             obj.end_date = request.POST.get('end_date')
             super().save_model(request, obj, form, change)
         except Exception as e:
-            raise Exception(e)
+            #raise Exception(e)
             self.message_user(request, str(e), level=messages.ERROR)
 
     def save_formset(self, request, form, formset, change):
@@ -629,6 +633,9 @@ class ReportModelModelAdmin(admin.ModelAdmin):
     list_filter = (('day', DateRangeFilter), CountryFilter)
     change_list_template = 'admin/sale_summary_change_list.html'
     date_hierarchy = 'day'
+
+    def get_rangefilter_timestamp_default(self, request):
+        return ('2021-08-01', '2021-08-30')
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(
