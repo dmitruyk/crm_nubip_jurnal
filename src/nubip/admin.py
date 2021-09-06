@@ -428,7 +428,7 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ['lecture', 'academic_group', 'index_number', 'day', 'custom_column']
     list_filter = ('academic_group', )
     date_hierarchy = 'day'
-    ordering = ('day', '-index_number')
+    ordering = ('day', 'index_number__name')
     inlines = [
             UserEventInline,
             # ChargeBoxActionInline,
@@ -692,7 +692,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 rde_teacher_counter = 0  if total_teacher_report_member_counter == 0 else \
                     round((rde_teacher.count() * 100) / total_teacher_report_member_counter, 2)
 
-                rde_headman_counter = 0 if total_teacher_report_member_counter == 0 else \
+                rde_headman_counter = 0 if total_headman_report_member_counter == 0 else \
                     round((rde_headman.count() * 100) / total_headman_report_member_counter, 2)
 
                 present_teacher_report = round(((teacher_report_counter * 100) / event_counter), 1)
