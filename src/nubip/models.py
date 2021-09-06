@@ -495,6 +495,8 @@ class UserEvent(CoreModel):
         ('sickness', 'Хворіє'),
         ('important', 'Поважна'),
         ('home', 'Сімейні обставини'),
+        ('no_reason ', 'Безпричинно відсутній'),
+        ('another_subgroup', 'Інша підгрупа'),
         ('other', 'Інше')
     )
 
@@ -639,8 +641,10 @@ class ReportDataEvent(CoreModel):
         ('sickness', 'Хворіє'),
         ('important', 'Поважна'),
         ('home', 'Сімейні обставини'),
+        ('no_reason ', 'Безпричинно відсутній'),
+        ('another_subgroup', 'Інша підгрупа'),
         ('other', 'Інше')
-        )
+    )
 
     report_data_user_data = models.ForeignKey(ReportUserEvent,
                                               related_name='report_data_user_data',
