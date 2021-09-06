@@ -716,7 +716,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
                 )
 
 
-        print(report_data)
+        #print(report_data)
 
 
         ls = list(
@@ -729,7 +729,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         response.context_data['summary_total'] = dict(
             qs.aggregate(**metrics)
         )
-        print(qs.aggregate(**metrics))
+        #print(qs.aggregate(**metrics))
         return response
 
     def custom_column(self, obj):

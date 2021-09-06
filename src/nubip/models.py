@@ -345,7 +345,7 @@ class Event(models.Model):
                                 g, _ = UserEvent.objects.update_or_create(event=self, user=user)
 
                     else:
-                        print('333333333')
+                        #print('333333333')
                         user_events = UserEvent.objects.filter(event=self).first()
                         new_event_report = ReportUserEvent(report_event=self,
                                                            report_creator=self.user)
@@ -452,7 +452,7 @@ class Event(models.Model):
 
                         #print(date(event_day.year, 1, 1) + relativedelta(weeks=w))
 
-                    print(event_day, week_day, week_number, end_week_number, '<+++++++++')
+                    #print(event_day, week_day, week_number, end_week_number, '<+++++++++')
                 else:
                     raise Exception(f'For parameter: {self.frequency_parameter} method not implemented!')
             transaction.savepoint_commit(sid)
