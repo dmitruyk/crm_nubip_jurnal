@@ -120,7 +120,11 @@ class MemberGroupInline(admin.TabularInline):
     model = MemberGroup
     extra = 0
     ordering = ['member_user__last_name']
-    raw_id_fields = ('member_user',)
+    raw_id_fields = ('member_user', )
+    # fieldsets = (
+    #     (None, {'fields': ('member_user__user', 'member_user__role')}),
+    # )
+    # list_display = ['member_user__user', 'member_user__role']
 
 
 class UserProfileInline(admin.TabularInline):
@@ -177,7 +181,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
     inlines = [
             MemberGroupInline,
         ]
-    list_display = ['name', 'students_count', 'curator', 'department', 'graduation', 'graduation_date']
+    list_display = ['name', 'students_count', 'curator', 'headman', 'department', 'graduation']
     list_filter = ('name', 'course')
     raw_id_fields = ('curator',)
     ordering = ['name']
@@ -197,6 +201,12 @@ class AcademicGroupAdmin(admin.ModelAdmin):
 
     def students_count(self, obj):
         return obj.students_count
+
+    def headman(self, obj):
+        m_g = MemberGroup.objects.filter(member_group=obj,
+                                         member_user__role='headman').first()
+        if m_g:
+            return m_g.member_user.name
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -638,6 +648,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         return ('2021-08-01', '2021-08-30')
 
     def changelist_view(self, request, extra_context=None):
+
         response = super().changelist_view(
             request,
             extra_context=extra_context,

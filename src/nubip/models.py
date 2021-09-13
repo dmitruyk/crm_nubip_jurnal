@@ -241,6 +241,11 @@ class MemberGroup(CoreModel):
                                     on_delete=models.DO_NOTHING,
                                     verbose_name='Учасник')
 
+    def display_role(self):
+        return self.member_user.user.role
+
+    display_role.short_description = 'Score'
+
 
 class Event(models.Model):
 
