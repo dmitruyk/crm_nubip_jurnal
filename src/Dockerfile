@@ -1,6 +1,6 @@
 FROM python:3.6
 
-ENV DEASY_GUNICORN_NUMBER_OF_WORKERS=2
+ENV DEASY_GUNICORN_NUMBER_OF_WORKERS=8
 
 RUN python -m pip install --upgrade pip
 
