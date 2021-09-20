@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.admin import DateFieldListFilter
-from .forms import CustomUserCreationForm, CustomUserChangeForm, MyCustomForm
+from .forms import CustomUserCreationForm, CustomUserChangeForm, MyCustomForm, UserEventForm
 from django.db.models import Count
 from django.db.models.query import Q
 
@@ -134,9 +134,22 @@ class UserProfileInline(admin.TabularInline):
 
 
 class UserEventInline(admin.TabularInline):
+    form  = UserEventForm
     model = UserEvent
     extra = 0
     ordering = ['user__user__last_name']
+
+    # def get_formset(self, request, obj=None, **kwargs):
+    #     print('kkkk')
+    #     initial = []
+    #     if request.method == "GET":
+    #         initial.append({
+    #             'presence': 'true',
+    #         })
+    #     formset = super(UserEventInline, self).get_formset(request, obj, **kwargs)
+    #     # formset.__init__ = curry(formset.__init__, initial=initial)
+    #     formset.form.base_fields['presence'].initial = [1]
+    #     return formset
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
@@ -148,6 +161,7 @@ class UserEventInline(admin.TabularInline):
         (None, {'fields': ('user', 'presence', 'reason', 'additional_info',)}),
     )
     list_display = ['user', 'presence', 'reason', 'additional_info']
+
 
 @admin.register(LectureName)
 class LectureNameAdmin(admin.ModelAdmin):

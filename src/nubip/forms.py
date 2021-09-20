@@ -1,5 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import User
+from .models import User, UserEvent
 from django.forms import ModelForm
 
 
@@ -66,3 +66,14 @@ class MyCustomForm(ModelForm):
         #     del self.fields['confidential']
 
 
+class UserEventForm(forms.ModelForm):
+    validated = forms.BooleanField()
+
+    class Meta:
+        model = UserEvent
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super(UserEventForm, self).__init__(*args, **kwargs)
+
+        self.fields['presence'].widget.attrs['checked'] = True
