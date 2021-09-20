@@ -678,7 +678,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
 
         report_data = []
 
-        print(request.user, '<----')
+        #print(request.user, '<----', qs)
 
         groups = set(q.academic_group for q in qs)
 
@@ -775,6 +775,11 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
             queryset = Event.objects.all()
+        elif request.user.role in ['curator']:
+            queryset = Event.objects.filter(academic_group__curator=request.user)
+        elif request.user.role in ['head_department']:
+            a_g = AcademicGroup.objects.filter(department__head=request.user)
+            queryset = Event.objects.filter(academic_group__in=a_g)
         return queryset
 
 
