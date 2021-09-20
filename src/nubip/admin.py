@@ -197,6 +197,8 @@ class AcademicGroupAdmin(admin.ModelAdmin):
                 queryset |= self.model.objects.filter(pk__in=[m.member_group.id for m in m_g])
         except Exception as e:
             raise Exception(e)
+        if not request.user.is_superuser:
+            queryset.filter(department__head=request.user)
         return queryset, use_distinct
 
     def students_count(self, obj):
@@ -673,6 +675,8 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         }
 
         report_data = []
+
+        print(request.user, '<----')
 
         groups = set(q.academic_group for q in qs)
 
