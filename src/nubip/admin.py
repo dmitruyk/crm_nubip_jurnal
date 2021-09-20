@@ -212,16 +212,14 @@ class AcademicGroupAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         if not request.user.is_superuser:
             _queryset = queryset.filter(department__head=request.user)
-            _queryset = queryset.annotate(
+            __queryset = _queryset.annotate(
                 students_count=Count('membergroup'),
             )
-
         else:
-            _queryset = queryset.annotate(
+            __queryset = queryset.annotate(
                 students_count=Count('membergroup'),
             )
-
-        return queryset
+        return __queryset
 
     # def queryset(self, request, queryset):
     #     """
