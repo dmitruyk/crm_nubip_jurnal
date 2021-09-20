@@ -502,6 +502,7 @@ class UserEvent(CoreModel):
         ('home', 'Сімейні обставини'),
         ('no_reason ', 'Безпричинно відсутній'),
         ('another_subgroup', 'Інша підгрупа'),
+        ('individual_schedule', 'Індивідуальний графік'),
         ('other', 'Інше')
     )
 
