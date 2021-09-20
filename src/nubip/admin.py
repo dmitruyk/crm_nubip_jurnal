@@ -518,6 +518,9 @@ class EventAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             ModelForm.base_fields['frequency_parameter'].disabled = True
             ModelForm.base_fields['end_date'].disabled = True
+        else:
+            ModelForm.base_fields['frequency_parameter'].disabled = False
+            ModelForm.base_fields['end_date'].disabled = False
         print(request.user.is_superuser, request.user, obj, '<--------')
         return ModelFormWithRequest
 
