@@ -599,8 +599,10 @@ class EventAdmin(admin.ModelAdmin):
             lectures = [lec.lecture for lec in tutor_lectures]
             queryset = queryset.filter(Q(lecture__in=lectures) | Q(academic_group__curator=request.user))
         elif request.user.role in ['head_department']:
+            tutor_lectures = TutorName.objects.filter(teacher=request.user).all()
+            lectures = [lec.lecture for lec in tutor_lectures]
             a_g = AcademicGroup.objects.filter(department__head=request.user)
-            queryset = queryset.filter(academic_group__in=a_g)
+            queryset = queryset.filter(Q(lecture__in=lectures) | Q(academic_group__in=a_g))
         else:
             return queryset.none()
         #     queryset = []
