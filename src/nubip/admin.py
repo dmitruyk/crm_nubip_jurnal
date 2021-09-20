@@ -197,8 +197,6 @@ class AcademicGroupAdmin(admin.ModelAdmin):
                 queryset |= self.model.objects.filter(pk__in=[m.member_group.id for m in m_g])
         except Exception as e:
             raise Exception(e)
-        if not request.user.is_superuser:
-            queryset.filter(department__head=request.user)
         return queryset, use_distinct
 
     def students_count(self, obj):
@@ -213,15 +211,16 @@ class AcademicGroupAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if not request.user.is_superuser:
-            queryset = queryset.filter(department__head=request.user)
-            queryset = queryset.annotate(
+            _queryset = queryset.filter(department__head=request.user)
+            _queryset = queryset.annotate(
                 students_count=Count('membergroup'),
             )
-            return queryset
 
-        queryset = queryset.annotate(
-            students_count=Count('membergroup'),
-        )
+        else:
+            _queryset = queryset.annotate(
+                students_count=Count('membergroup'),
+            )
+
         return queryset
 
     # def queryset(self, request, queryset):
