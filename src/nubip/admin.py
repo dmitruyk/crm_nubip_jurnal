@@ -515,10 +515,10 @@ class EventAdmin(admin.ModelAdmin):
                 return ModelForm(*args, **kwargs)
 
         setattr(ModelFormWithRequest, 'user', request.user)
-
-        if obj and request.user.is_superuser is False:
+        if not request.user.is_superuser:
             ModelForm.base_fields['frequency_parameter'].disabled = True
             ModelForm.base_fields['end_date'].disabled = True
+        print(request.user.is_superuser, request.user, obj, '<--------')
         return ModelFormWithRequest
 
     def students(self, obj):
