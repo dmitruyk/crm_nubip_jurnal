@@ -67,11 +67,12 @@ class MyCustomForm(ModelForm):
 
 
 class UserEventForm(forms.ModelForm):
-    validated = forms.BooleanField()
+    #validated = forms.BooleanField()
+    #presence = forms.BooleanField(required=False, initial=True)
 
     class Meta:
         model = UserEvent
-        fields = '__all__'
+        fields = ('presence',)
 
     def __init__(self, *args, **kwargs):
         super(UserEventForm, self).__init__(*args, **kwargs)

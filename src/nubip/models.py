@@ -316,8 +316,9 @@ class Event(models.Model):
                 html = f'<html><body>Report for {self.lecture}, created by {self.user} already exists!</body></html>'
                 return HttpResponse(html)
 
-    def clean(self):
-        pass
+    # def clean(self):
+    #     print('777')
+    #     pass
 
     def easy_save(self, *args, **kwargs):
         super().save(*args, **kwargs)

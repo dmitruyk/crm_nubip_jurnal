@@ -134,7 +134,7 @@ class UserProfileInline(admin.TabularInline):
 
 
 class UserEventInline(admin.TabularInline):
-    #form  = UserEventForm
+    form  = UserEventForm
     model = UserEvent
     extra = 0
     ordering = ['user__user__last_name']
