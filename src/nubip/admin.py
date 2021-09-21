@@ -760,7 +760,9 @@ class ReportModelModelAdmin(admin.ModelAdmin):
 
                 total_count = 0 if total_coefficient == 0 else round(total_coefficient, 1)
 
-                report_data.append({'academic_group__name': g.name,
+                report_data.append({
+                                    'academic_group__id': g.id.__str__(),
+                                    'academic_group__name': g.name,
                                     'apply_teacher_reports': teacher_report_counter,
                                     'apply_headman_reports': headman_report_counter,
                                     'total_events': event_counter,

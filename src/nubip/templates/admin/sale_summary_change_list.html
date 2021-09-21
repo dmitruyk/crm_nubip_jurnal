@@ -65,7 +65,7 @@
         <tbody>
           {% for row in summary %}
           <tr class="{% cycle 'row1' 'row2' %}">
-              <td> <a href="{% url 'nubip:details' %}">{{ row.academic_group__name }}</a> </td>
+              <td> <a href="{% url 'nubip:details' %}?group_id={{row.academic_group__id}}">{{ row.academic_group__name }}</a> </td>
               <td> {{ row.apply_teacher_reports | default:0 | intcomma }} </td>
               <td> {{ row.apply_headman_reports | default:0 | intcomma }} </td>
               <td> {{ row.total_events | default:0 | intcomma }} </td>

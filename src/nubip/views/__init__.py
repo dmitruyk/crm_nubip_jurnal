@@ -7,5 +7,5 @@ from .v1 import tables
 urlpatterns = [
 #    url(r'^', include(general.urlpatterns)),
     url(r'^v1/', include(v1.urlpatterns)),
-    url('details/?P<str:group_id>/', tables.detail_view, name="details"),
+    url('details/', tables.detail_view, name="details"),
 ]
