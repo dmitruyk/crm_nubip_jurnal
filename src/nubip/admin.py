@@ -196,7 +196,7 @@ class AcademicGroupAdmin(admin.ModelAdmin):
             MemberGroupInline,
         ]
     list_display = ['name', 'students_count', 'curator', 'headman', 'department', 'graduation']
-    list_filter = ('name', 'course')
+    list_filter = ('name', 'course', 'graduation')
     raw_id_fields = ('curator',)
     ordering = ['name']
 
@@ -672,6 +672,20 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         return ('2021-08-01', '2021-08-30')
 
     def changelist_view(self, request, extra_context=None):
+        self.request = request
+        if request.GET:
+            return super().changelist_view(request, extra_context=extra_context)
+
+        __date = date.today()
+        params = ['day', 'month', 'year']
+        field_keys = ['{}__{}'.format(self.date_hierarchy, i) for i in params]
+        field_values = [getattr(__date, i) for i in params]
+        query_params = dict(zip(field_keys, field_values))
+        url = '{}?{}'.format(request.path, urlencode(query_params))
+        return redirect(url)
+
+
+    def changelist_view(self, request, extra_context=None):
 
         response = super().changelist_view(
             request,
@@ -774,6 +788,7 @@ class ReportModelModelAdmin(admin.ModelAdmin):
             qs.aggregate(**metrics)
         )
         #print(qs.aggregate(**metrics))
+
         return response
 
     def custom_column(self, obj):
@@ -790,6 +805,8 @@ class ReportModelModelAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+        today = datetime.now()
+
         if request.user.is_superuser:
             queryset = Event.objects.all()
         elif request.user.role in ['curator']:
@@ -797,7 +814,11 @@ class ReportModelModelAdmin(admin.ModelAdmin):
         elif request.user.role in ['head_department']:
             a_g = AcademicGroup.objects.filter(department__head=request.user)
             queryset = Event.objects.filter(academic_group__in=a_g)
-        return queryset
+        if request.GET.get('day__range__gte', None) or request.GET.get('day__year', None):
+            new = queryset
+        else:
+            new = queryset.filter(day__range=[today.replace(day=1), today])
+        return new
 
 
 # @admin.register(GEV)
