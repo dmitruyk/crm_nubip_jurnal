@@ -225,15 +225,15 @@ class AcademicGroupAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
-            queryset = queryset.filter()
+            _queryset = queryset.filter()
             #queryset = queryset.filter(department__head=request.user)
         elif request.user.role == 'head_department':
-            queryset.filter(department__head=request.user)
+            _queryset = queryset.filter(department__head=request.user)
         elif request.user.role == 'curator':
-            queryset = queryset.filter(curator=request.user)
+            _queryset = queryset.filter(curator=request.user)
                         # exclude(report_creator=request.user)
 
-        __queryset = queryset.annotate(
+        __queryset = _queryset.annotate(
             students_count=Count('membergroup'),
         )
         return __queryset
