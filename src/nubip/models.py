@@ -504,6 +504,7 @@ class UserEvent(CoreModel):
         ('no_reason ', 'Безпричинно відсутній'),
         ('another_subgroup', 'Інша підгрупа'),
         ('individual_schedule', 'Індивідуальний графік'),
+        ('dual_form', 'Дуальна форма навчання'),
         ('other', 'Інше')
     )
 
