@@ -224,15 +224,18 @@ class AcademicGroupAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        if not request.user.is_superuser:
-            _queryset = queryset.filter(department__head=request.user)
-            __queryset = _queryset.annotate(
-                students_count=Count('membergroup'),
-            )
-        else:
-            __queryset = queryset.annotate(
-                students_count=Count('membergroup'),
-            )
+        if request.user.is_superuser:
+            queryset = queryset.filter()
+            #queryset = queryset.filter(department__head=request.user)
+        elif request.user.role == 'head_department':
+            queryset.filter(department__head=request.user)
+        elif request.user.role == 'curator':
+            queryset = queryset.filter(curator=request.user)
+                        # exclude(report_creator=request.user)
+
+        __queryset = queryset.annotate(
+            students_count=Count('membergroup'),
+        )
         return __queryset
 
     # def queryset(self, request, queryset):
